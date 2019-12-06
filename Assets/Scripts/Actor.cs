@@ -28,6 +28,22 @@ public class Actor : MonoBehaviour
         waypoints = new List<Waypoint>();
     }
 
+    public void SetInvisible()
+    {
+        transform.position = new Vector3(10000, 0, 0);
+    }
+
+    public void ClearLines()
+    {
+        foreach (Transform child in transform)
+        {
+            if (child.name == "Line")
+            {
+                GameObject.Destroy(child.gameObject);
+            }
+        }
+    }
+
     void FixedUpdate()
     {
         if (waypoints.Count == 0)

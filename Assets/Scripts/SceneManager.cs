@@ -7,153 +7,62 @@ using UnityEngine.UI;
 public class SceneManager : MonoBehaviour
 {
     public ObstacleManager obstacleManager;
-    public GroundGrid groundGrid;
     public Actor actor;
 
-    public GameObject LoadingText;
-    public Slider ResolutionSlider;
-    public Toggle UseZones;
-    public Toggle UseRRT;
+    public float BoardWidth;
+    public float BoardHeight;
 
-    private enum State { None, RegenerateObstacles, RegenerateObstacles2, RegenerateObstacles3, CalculatePath, CalculatePath2, CalculateObstacleCollisions, RegenerateGrid, CreateObstacles, ShowPath };
-    private State state;
-    private IEnumerator calculatePathCoroutine;
-    private bool useZones = false;
-    private bool useRRT = false;
-    private List<int> outPath;
-    private bool finishedCalculatingPath = false;
+    public GameObject StartSprite;
+    public GameObject EndSprite;
+    public GameObject LoadingText;
+
+    private enum State { None, RegenerateObstacles, CalculatePath, WaitForPath, ShowPath };
+    State state;
+    bool startValid;
+    bool endValid;
+    RRT rrt;
 
     void Start()
     {
-        groundGrid.CreateGrid((int)ResolutionSlider.value, (int)ResolutionSlider.value);
-        state = State.CreateObstacles;
-        calculatePathCoroutine = null;
-        outPath = new List<int>();
-        useRRT = UseRRT.isOn;
-        useZones = UseZones.isOn;
-    }
-
-    public void SetBoardResolution()
-    {
-        LoadingText.SetActive(true);
-        state = State.RegenerateGrid;
-        actor.transform.position = new Vector3(10000, 0, 0);
-        actor.waypoints.Clear();
-        groundGrid.ResetPath();
-    }
-
-    public void SetZoneUsage()
-    {
-        useZones = UseZones.isOn;
-        groundGrid.ResetPath();
-        state = State.CalculateObstacleCollisions;
-        if (UseZones.isOn)
-        {
-            UseRRT.isOn = false;
-        }
-        actor.transform.position = new Vector3(10000, 0, 0);
-        actor.waypoints.Clear();
-    }
-
-    public void SetRRTUsage()
-    {
-        groundGrid.ResetPath();
-        useRRT = UseRRT.isOn;
-        if (UseRRT.isOn)
-        {
-            UseZones.isOn = false;
-        }
-        else
-        {
-            UseZones.isOn = true;
-        }
-        actor.transform.position = new Vector3(10000, 0, 0);
-        actor.waypoints.Clear();
+        startValid = endValid = false;
+        state = State.RegenerateObstacles;
     }
 
     void Update()
     {
-        if (state != State.CalculatePath2 && state != State.ShowPath && state != State.None)
-        {
-            if (calculatePathCoroutine != null)
-            {
-                StopCoroutine(calculatePathCoroutine);
-                calculatePathCoroutine = null;
-            }
-        }
         switch (state)
         {
             case State.CalculatePath:
-                groundGrid.HidePath();
-                outPath.Clear();
-                finishedCalculatingPath = false;
-                state = State.CalculatePath2;
+                actor.ClearLines();
+                rrt = new RRT(StartSprite.transform.position, EndSprite.transform.position, actor, 250, BoardWidth, BoardHeight);
+                state = State.WaitForPath;
                 break;
-            case State.CalculatePath2:
-                if (useRRT)
+            case State.WaitForPath:
+                rrt.NextStep();
+                if (rrt.Finished)
                 {
-                    if (calculatePathCoroutine == null)
-                    {
-                        calculatePathCoroutine = PathPlanner.RRT(groundGrid.GetStartNodeIndex(), groundGrid.GetEndNodeIndex(), groundGrid, actor, outPath);
-                        StartCoroutine(calculatePathCoroutine);
-                    }
-                    state = State.ShowPath;
-                }
-                else
-                {
-                    if (calculatePathCoroutine == null)
-                    {
-                        calculatePathCoroutine = PathPlanner.A_Star(groundGrid.GetStartNodeIndex(), groundGrid.GetEndNodeIndex(), groundGrid, outPath);
-                        StartCoroutine(calculatePathCoroutine);
-                    }
                     state = State.ShowPath;
                 }
                 break;
             case State.ShowPath:
-                if (outPath.Count > 0)
+                actor.waypoints.Clear();
+                actor.transform.position = StartSprite.transform.position;
+                if (rrt.Successful)
                 {
-                    finishedCalculatingPath = true;
-                    actor.transform.position = groundGrid.GetNodePosition(outPath.ElementAt(0));
-                    actor.waypoints.Clear();
-                    foreach (int item in outPath)
+                    List<Vector3> path = rrt.GetPath();
+                    foreach (Vector3 pos in path)
                     {
-                        actor.waypoints.Add(new Actor.Waypoint(groundGrid.GetNodePosition(item), Quaternion.Euler(0, 0, 0)));
+                        actor.waypoints.Add(new Actor.Waypoint(pos, Quaternion.Euler(0, 0, 0)));
                     }
-                    state = State.None;
                 }
-                else if (finishedCalculatingPath)
-                {
-                    finishedCalculatingPath = false;
-                    state = State.None;
-                }
+                state = State.None;
                 break;
-
             case State.RegenerateObstacles:
-                groundGrid.ResetPath();
-                state = State.RegenerateObstacles2;
-                break;
-            case State.RegenerateObstacles2:
                 obstacleManager.ResetObstacles();
-                state = State.RegenerateObstacles3;
-                break;
-            case State.CreateObstacles:
-            case State.RegenerateObstacles3:
-                obstacleManager.CreateObstacles();
-                state = State.CalculateObstacleCollisions;
-                break;
-
-            case State.RegenerateGrid:
-                groundGrid.CreateGrid((int)ResolutionSlider.value, (int)ResolutionSlider.value);
-                state = State.CalculateObstacleCollisions;
-                break;
-
-            case State.CalculateObstacleCollisions:
-                groundGrid.UpdateObstacleCollisions(useZones);
+                obstacleManager.CreateObstacles(BoardWidth, BoardHeight);
                 state = State.None;
                 break;
             case State.None:
-                LoadingText.SetActive(false);
-                break;
             default:
                 LoadingText.SetActive(false);
                 break;
@@ -165,74 +74,48 @@ public class SceneManager : MonoBehaviour
         }
         else if (Input.GetKeyDown(KeyCode.R))
         {
-            actor.transform.position = new Vector3(10000, 0, 0);
+            startValid = endValid = false;
+            actor.SetInvisible();
             actor.waypoints.Clear();
+            StartSprite.transform.position = EndSprite.transform.position = new Vector3(10000.0f, 0.0f, 0.0f);
             state = State.RegenerateObstacles;
             LoadingText.SetActive(true);
         }
         else if (Input.GetMouseButtonDown(0))
         {
-            if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
+            RaycastHit hit;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
             {
-                //Create obstacle
-                RaycastHit hit;
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("Nodes")))
+                if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
                 {
-                    groundGrid.ResetPath();
-                    obstacleManager.CreateObstacle(hit.point);
-                    actor.transform.position = new Vector3(10000, 0, 0);
+                    startValid = endValid = false;
+                    actor.SetInvisible();
                     actor.waypoints.Clear();
-                    state = State.CalculateObstacleCollisions;
-                    LoadingText.SetActive(true);
+                    obstacleManager.CreateObstacle(hit.point);
                 }
-            }
-            else
-            {
-                state = State.None;
-                //Set start node
-                RaycastHit hit;
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("Nodes")))
+                else
                 {
-                    Node collidedNode = hit.collider.GetComponent<Node>();
-                    if (!collidedNode.IsOccupied() && collidedNode != groundGrid.startNode && collidedNode != groundGrid.endNode)
+                    StartSprite.transform.position = hit.point;
+                    startValid = true;
+                    if (startValid && endValid)
                     {
-                        groundGrid.StartSprite.transform.position = new Vector3(collidedNode.transform.position.x, groundGrid.StartSprite.transform.position.y, collidedNode.transform.position.z);
-                        groundGrid.startNode = collidedNode;
-                        actor.transform.position = new Vector3(10000, 0, 0);
-                        actor.waypoints.Clear();
-                        if (groundGrid.startNode != null && groundGrid.endNode != null)
-                        {
-                            actor.transform.position = groundGrid.StartSprite.transform.position;
-                            state = State.CalculatePath;
-                            LoadingText.SetActive(true);
-                        }
+                        state = State.CalculatePath;
                     }
                 }
             }
         }
         else if (Input.GetMouseButtonDown(1))
         {
-            state = State.None;
-            //Set end node
             RaycastHit hit;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("Nodes")))
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
             {
-                Node collidedNode = hit.collider.GetComponent<Node>();
-                if (!collidedNode.IsOccupied() && collidedNode != groundGrid.startNode && collidedNode != groundGrid.endNode)
+                EndSprite.transform.position = hit.point;
+                endValid = true;
+                if (startValid && endValid)
                 {
-                    groundGrid.EndSprite.transform.position = new Vector3(collidedNode.transform.position.x, groundGrid.EndSprite.transform.position.y, collidedNode.transform.position.z);
-                    groundGrid.endNode = collidedNode;
-                    actor.transform.position = new Vector3(10000, 0, 0);
-                    actor.waypoints.Clear();
-                    if (groundGrid.startNode != null && groundGrid.endNode != null)
-                    {
-                        actor.transform.position = groundGrid.StartSprite.transform.position;
-                        state = State.CalculatePath;
-                        LoadingText.SetActive(true);
-                    }
+                    state = State.CalculatePath;
                 }
             }
         }

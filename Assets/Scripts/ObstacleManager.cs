@@ -9,7 +9,6 @@ public class ObstacleManager : MonoBehaviour
     //public GameObject ObstacleCylinderPrefab;
     public Obstacle ObstacleShipPrefab;
     public int numObstacles = 1;
-    public GroundGrid groundGrid;
 
     public List<Obstacle> Obstacles { get => obstacles; }
     List<Obstacle> obstacles;
@@ -21,25 +20,18 @@ public class ObstacleManager : MonoBehaviour
 
     public void ResetObstacles()
     {
-        while (obstacles.Any())
+        foreach (Obstacle obstacle in obstacles)
         {
-            const float delay = 0.5f;
-
-            //NECESSARY so that the OnCollisionExit() function is called for nodes that this used to intersect with
-            obstacles.First().transform.position = new Vector3(0.0f, -10000.0f, 0.0f);
-
-            //Destroy the object after a delay so that the physics engine has time to call OnCollisionExit() for intersecting nodes
-            Destroy(obstacles.First(), delay);
-
-            obstacles.RemoveAt(0);
+            Destroy(obstacle.gameObject);
         }
+        obstacles.Clear();
     }
 
-    public void CreateObstacles()
+    public void CreateObstacles(float boardWidth, float boardHeight)
     {
         for (int i = 0; i < numObstacles; ++i)
         {
-            Vector3 pos = new Vector3(Random.Range(-groundGrid.transform.localScale.x / 2, groundGrid.transform.localScale.x / 2), 0.0f, Random.Range(-groundGrid.transform.localScale.y / 2, groundGrid.transform.localScale.y / 2));
+            Vector3 pos = new Vector3(Random.Range(-boardWidth / 2.0f, boardWidth / 2.0f), 0.0f, Random.Range(-boardHeight / 2.0f, boardHeight / 2.0f));
             CreateObstacle(pos);
         }
     }
