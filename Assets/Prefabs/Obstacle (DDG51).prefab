@@ -3176,7 +3176,6 @@ GameObject:
   - component: {fileID: 4441747609500114}
   - component: {fileID: 4381186399400108817}
   - component: {fileID: -2771354296910811948}
-  - component: {fileID: 4426891825933085183}
   m_Layer: 8
   m_Name: Obstacle (DDG51)
   m_TagString: Untagged
@@ -3193,7 +3192,7 @@ Transform:
   m_GameObject: {fileID: 1493260802953620}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4831450591460610}
   m_Father: {fileID: 0}
@@ -3225,56 +3224,10 @@ CapsuleCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  m_Radius: 26
-  m_Height: 391
+  m_Radius: 2.6
+  m_Height: 40
   m_Direction: 2
-  m_Center: {x: 0, y: 15.7, z: 9.4}
---- !u!114 &4426891825933085183
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1493260802953620}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fd1c7a50cb9e2e24985842039733cf93, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Angles:
-  - 22.5
-  - 22.5
-  - 22.5
-  - 22.5
-  - 22.5
-  - 22.5
-  - 22.5
-  - 22.5
-  - 22.5
-  - 22.5
-  - 22.5
-  - 22.5
-  - 22.5
-  - 22.5
-  - 22.5
-  - 22.5
-  RadiusAtEachAngle:
-  - 15
-  - 15
-  - 8
-  - 8
-  - 8
-  - 8
-  - 10
-  - 10
-  - 10
-  - 10
-  - 13
-  - 13
-  - 13
-  - 13
-  - 15
-  - 15
+  m_Center: {x: 0, y: 1.57, z: 0.94}
 --- !u!1 &1493954058935076
 GameObject:
   m_ObjectHideFlags: 0
@@ -4926,7 +4879,7 @@ Transform:
   m_GameObject: {fileID: 1721872693524962}
   m_LocalRotation: {x: -0, y: 0.7071068, z: 0.7071068, w: 0}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 100, y: 100, z: 100}
+  m_LocalScale: {x: 10, y: 10, z: 10}
   m_Children:
   - {fileID: 4633652624438798}
   - {fileID: 4500723658080588}

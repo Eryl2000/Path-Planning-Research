@@ -19,7 +19,6 @@ public class RRT
 
     public RRT(Vector3 _startPos, Vector3 _endPos, Actor _actor, int _maxSteps, float _boardWidth, float _boardHeight)
     {
-        Debug.Log("Starting rrt");
         startPos = _startPos;
         endPos = _endPos;
         actor = _actor;
@@ -34,6 +33,7 @@ public class RRT
 
     public void NextStep()
     {
+        int count = 0;
         bool success = false;
         while (!success)
         {
@@ -58,6 +58,13 @@ public class RRT
                     Finished = true;
                     return;
                 }
+            }
+            count++;
+            if(count > 10000)
+            {
+                Successful = false;
+                Finished = false;
+                return;
             }
         }
         stepsTaken++;
@@ -133,15 +140,10 @@ public class RRT
         for (int step = 0; step < numSteps; ++step)
         {
             actor.transform.position = Vector3.Lerp(start, newPos, (float)step / (numSteps - 1));
-            Collider[] colliderHits = Physics.OverlapBox(actor.transform.position, actor.GetComponent<Collider>().bounds.extents, actor.transform.rotation, 1 << LayerMask.NameToLayer("Obstacles"));
-            foreach (Collider col in colliderHits)
+            if (actor.HitsObstacle())
             {
-                if (col.gameObject.layer == LayerMask.NameToLayer("Obstacles"))
-                {
-                    //Actor intersects an obstacle on its path from the start to end node
-                    newPos = Vector3.positiveInfinity;
-                    return false;
-                }
+                newPos = Vector3.positiveInfinity;
+                return false;
             }
         }
         return true;

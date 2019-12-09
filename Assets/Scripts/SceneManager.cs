@@ -9,8 +9,7 @@ public class SceneManager : MonoBehaviour
     public ObstacleManager obstacleManager;
     public Actor actor;
 
-    public float BoardWidth;
-    public float BoardHeight;
+    public GameObject GroundPlane;
 
     public GameObject StartSprite;
     public GameObject EndSprite;
@@ -21,11 +20,24 @@ public class SceneManager : MonoBehaviour
     bool startValid;
     bool endValid;
     RRT rrt;
+    float boardWidth;
+    float boardHeight;
 
     void Start()
     {
+        boardWidth = GroundPlane.transform.localScale.x * 10.0f;
+        boardHeight = GroundPlane.transform.localScale.z * 10.0f;
         startValid = endValid = false;
         state = State.RegenerateObstacles;
+    }
+
+    void ResetWidgets()
+    {
+        startValid = endValid = false;
+        actor.SetInvisible();
+        actor.waypoints.Clear();
+        actor.ClearLines();
+        StartSprite.transform.position = EndSprite.transform.position = new Vector3(10000.0f, 0.0f, 0.0f);
     }
 
     void Update()
@@ -34,7 +46,7 @@ public class SceneManager : MonoBehaviour
         {
             case State.CalculatePath:
                 actor.ClearLines();
-                rrt = new RRT(StartSprite.transform.position, EndSprite.transform.position, actor, 250, BoardWidth, BoardHeight);
+                rrt = new RRT(StartSprite.transform.position, EndSprite.transform.position, actor, 2500, boardWidth, boardHeight);
                 state = State.WaitForPath;
                 break;
             case State.WaitForPath:
@@ -58,8 +70,7 @@ public class SceneManager : MonoBehaviour
                 state = State.None;
                 break;
             case State.RegenerateObstacles:
-                obstacleManager.ResetObstacles();
-                obstacleManager.CreateObstacles(BoardWidth, BoardHeight);
+                obstacleManager.GenerateObstacles(boardWidth, boardHeight);
                 state = State.None;
                 break;
             case State.None:
@@ -74,10 +85,7 @@ public class SceneManager : MonoBehaviour
         }
         else if (Input.GetKeyDown(KeyCode.R))
         {
-            startValid = endValid = false;
-            actor.SetInvisible();
-            actor.waypoints.Clear();
-            StartSprite.transform.position = EndSprite.transform.position = new Vector3(10000.0f, 0.0f, 0.0f);
+            ResetWidgets();
             state = State.RegenerateObstacles;
             LoadingText.SetActive(true);
         }
@@ -89,18 +97,26 @@ public class SceneManager : MonoBehaviour
             {
                 if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
                 {
-                    startValid = endValid = false;
-                    actor.SetInvisible();
-                    actor.waypoints.Clear();
+                    ResetWidgets();
                     obstacleManager.CreateObstacle(hit.point);
+                    state = State.None;
                 }
                 else
                 {
-                    StartSprite.transform.position = hit.point;
-                    startValid = true;
-                    if (startValid && endValid)
+                    actor.transform.position = hit.point;
+                    if (actor.HitsObstacle())
                     {
-                        state = State.CalculatePath;
+                        actor.SetInvisible();
+                        StartSprite.transform.position = new Vector3(10000.0f, 0.0f, 0.0f);
+                    }
+                    else
+                    {
+                        StartSprite.transform.position = hit.point;
+                        startValid = true;
+                        if (startValid && endValid)
+                        {
+                            state = State.CalculatePath;
+                        }
                     }
                 }
             }
@@ -111,11 +127,20 @@ public class SceneManager : MonoBehaviour
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
             {
-                EndSprite.transform.position = hit.point;
-                endValid = true;
-                if (startValid && endValid)
+                actor.transform.position = hit.point;
+                if (actor.HitsObstacle())
                 {
-                    state = State.CalculatePath;
+                    actor.SetInvisible();
+                    EndSprite.transform.position = new Vector3(10000.0f, 0.0f, 0.0f);
+                }
+                else
+                {
+                    EndSprite.transform.position = hit.point;
+                    endValid = true;
+                    if (startValid && endValid)
+                    {
+                        state = State.CalculatePath;
+                    }
                 }
             }
         }

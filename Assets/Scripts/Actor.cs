@@ -28,6 +28,19 @@ public class Actor : MonoBehaviour
         waypoints = new List<Waypoint>();
     }
 
+    public bool HitsObstacle()
+    {
+        Collider[] colliderHits = Physics.OverlapBox(transform.position, GetComponent<Collider>().bounds.extents, transform.rotation, 1 << LayerMask.NameToLayer("Obstacles"));
+        foreach (Collider col in colliderHits)
+        {
+            if (col.gameObject.layer == LayerMask.NameToLayer("Obstacles"))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void SetInvisible()
     {
         transform.position = new Vector3(10000, 0, 0);
