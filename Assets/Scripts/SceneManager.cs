@@ -15,10 +15,13 @@ public class SceneManager : MonoBehaviour
     public GameObject EndSprite;
     public GameObject LoadingText;
 
-    private enum State { None, RegenerateObstacles, CalculatePath, WaitForPath, ShowPath };
-    State state;
+    private enum SceneState { None, RegenerateObstacles, CalculatePath, WaitForPath, ShowPath };
+    SceneState sceneState;
     bool startValid;
     bool endValid;
+    State startState;
+    State endState;
+
     RRT rrt;
     float boardWidth;
     float boardHeight;
@@ -28,52 +31,52 @@ public class SceneManager : MonoBehaviour
         boardWidth = GroundPlane.transform.localScale.x * 10.0f;
         boardHeight = GroundPlane.transform.localScale.z * 10.0f;
         startValid = endValid = false;
-        state = State.RegenerateObstacles;
+        sceneState = SceneState.RegenerateObstacles;
     }
 
     void ResetWidgets()
     {
         startValid = endValid = false;
         actor.SetInvisible();
-        actor.waypoints.Clear();
+        actor.ClearWaypoints();
         actor.ClearLines();
         StartSprite.transform.position = EndSprite.transform.position = new Vector3(10000.0f, 0.0f, 0.0f);
     }
 
     void Update()
     {
-        switch (state)
+        switch (sceneState)
         {
-            case State.CalculatePath:
+            case SceneState.CalculatePath:
                 actor.ClearLines();
-                rrt = new RRT(StartSprite.transform.position, EndSprite.transform.position, actor, 2500, boardWidth, boardHeight);
-                state = State.WaitForPath;
+                rrt = new RRT(startState, endState, actor, 5000, boardWidth, boardHeight);
+                sceneState = SceneState.WaitForPath;
                 break;
-            case State.WaitForPath:
+            case SceneState.WaitForPath:
                 rrt.NextStep();
                 if (rrt.Finished)
                 {
-                    state = State.ShowPath;
+                    sceneState = SceneState.ShowPath;
                 }
                 break;
-            case State.ShowPath:
-                actor.waypoints.Clear();
+            case SceneState.ShowPath:
+                actor.ClearWaypoints();
                 actor.transform.position = StartSprite.transform.position;
                 if (rrt.Successful)
                 {
-                    List<Vector3> path = rrt.GetPath();
-                    foreach (Vector3 pos in path)
+                    List<State> path = rrt.GetPath();
+                    foreach (State state in path)
                     {
-                        actor.waypoints.Add(new Actor.Waypoint(pos, Quaternion.Euler(0, 0, 0)));
+                        actor.AddWaypoint(state);
                     }
                 }
-                state = State.None;
+                sceneState = SceneState.None;
                 break;
-            case State.RegenerateObstacles:
+            case SceneState.RegenerateObstacles:
                 obstacleManager.GenerateObstacles(boardWidth, boardHeight);
-                state = State.None;
+                sceneState = SceneState.None;
                 break;
-            case State.None:
+            case SceneState.None:
             default:
                 LoadingText.SetActive(false);
                 break;
@@ -86,7 +89,7 @@ public class SceneManager : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.R))
         {
             ResetWidgets();
-            state = State.RegenerateObstacles;
+            sceneState = SceneState.RegenerateObstacles;
             LoadingText.SetActive(true);
         }
         else if (Input.GetMouseButtonDown(0))
@@ -99,23 +102,19 @@ public class SceneManager : MonoBehaviour
                 {
                     ResetWidgets();
                     obstacleManager.CreateObstacle(hit.point);
-                    state = State.None;
+                    sceneState = SceneState.None;
                 }
                 else
                 {
-                    actor.transform.position = hit.point;
-                    if (actor.HitsObstacle())
+                    State possibleState = new State(hit.point, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), Vector3.zero);
+                    if (!actor.HitsObstacle(possibleState))
                     {
-                        actor.SetInvisible();
-                        StartSprite.transform.position = new Vector3(10000.0f, 0.0f, 0.0f);
-                    }
-                    else
-                    {
-                        StartSprite.transform.position = hit.point;
+                        startState = possibleState;
+                        StartSprite.transform.position = possibleState.position;
                         startValid = true;
                         if (startValid && endValid)
                         {
-                            state = State.CalculatePath;
+                            sceneState = SceneState.CalculatePath;
                         }
                     }
                 }
@@ -127,19 +126,15 @@ public class SceneManager : MonoBehaviour
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
             {
-                actor.transform.position = hit.point;
-                if (actor.HitsObstacle())
+                State possibleState = new State(hit.point, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), Vector3.zero);
+                if (!actor.HitsObstacle(possibleState))
                 {
-                    actor.SetInvisible();
-                    EndSprite.transform.position = new Vector3(10000.0f, 0.0f, 0.0f);
-                }
-                else
-                {
-                    EndSprite.transform.position = hit.point;
+                    endState = possibleState;
+                    EndSprite.transform.position = possibleState.position;
                     endValid = true;
                     if (startValid && endValid)
                     {
-                        state = State.CalculatePath;
+                        sceneState = SceneState.CalculatePath;
                     }
                 }
             }

@@ -6,38 +6,47 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class Actor : MonoBehaviour
 {
-    public class Waypoint
-    {
-        public Waypoint(Vector3 _position, Quaternion _orientation)
-        {
-            position = _position;
-            orientation = _orientation;
-        }
-        public Vector3 position;
-        public Quaternion orientation;
-    }
-
-
-
-
-    public List<Waypoint> waypoints;
     public float speed = 5.0f;
+
+    List<State> waypoints;
+    State prevWaypoint;
+    int currentWaypointIndex;
 
     void Awake()
     {
-        waypoints = new List<Waypoint>();
+        waypoints = new List<State>();
+        prevWaypoint = null;
+        currentWaypointIndex = 0;
     }
 
-    public bool HitsObstacle()
+    public void AddWaypoint(State waypoint)
     {
+        waypoints.Add(waypoint);
+        prevWaypoint = waypoints.ElementAt(currentWaypointIndex);
+    }
+
+    public void ClearWaypoints()
+    {
+        waypoints.Clear();
+        prevWaypoint = null;
+        currentWaypointIndex = 0;
+    }
+
+    public bool HitsObstacle(State state)
+    {
+        Vector3 prevPosition = transform.position;
+        transform.position = state.position;
+        transform.rotation = state.rotation;
         Collider[] colliderHits = Physics.OverlapBox(transform.position, GetComponent<Collider>().bounds.extents, transform.rotation, 1 << LayerMask.NameToLayer("Obstacles"));
         foreach (Collider col in colliderHits)
         {
             if (col.gameObject.layer == LayerMask.NameToLayer("Obstacles"))
             {
+                transform.position = prevPosition;
                 return true;
             }
         }
+        transform.position = prevPosition;
         return false;
     }
 
@@ -63,21 +72,25 @@ public class Actor : MonoBehaviour
         {
             return;
         }
-        float distToTravel = speed * Time.fixedDeltaTime;
-        float traveled = 0f;
-        while (traveled < distToTravel && waypoints.Count > 0)
+        float distToTravelThisStep = speed * Time.fixedDeltaTime;
+        float traveledThisStep = 0f;
+        while (traveledThisStep < distToTravelThisStep && waypoints.Count > currentWaypointIndex)
         {
-            float distToNext = Vector3.Distance(transform.position, waypoints.ElementAt(0).position);
-            if (traveled + distToNext <= distToTravel)
+            float distToNextWaypoint = Vector3.Distance(transform.position, waypoints.ElementAt(currentWaypointIndex).position);
+            if (traveledThisStep + distToNextWaypoint <= distToTravelThisStep)
             {
-                transform.position = waypoints.ElementAt(0).position;
-                traveled += distToNext;
-                waypoints.RemoveAt(0);
+                transform.position = waypoints.ElementAt(currentWaypointIndex).position;
+                transform.rotation = waypoints.ElementAt(currentWaypointIndex).rotation;
+                traveledThisStep += distToNextWaypoint;
+                prevWaypoint = waypoints.ElementAt(currentWaypointIndex);
+                currentWaypointIndex += 1;
             }
             else
             {
-                transform.position += Vector3.Normalize(waypoints.ElementAt(0).position - transform.position) * (distToTravel - traveled);
-                traveled = distToTravel;
+                transform.position += (waypoints.ElementAt(currentWaypointIndex).position - transform.position).normalized * (distToTravelThisStep - traveledThisStep);
+                float t = Vector3.Distance(prevWaypoint.position, transform.position) / Vector3.Distance(prevWaypoint.position, waypoints.ElementAt(currentWaypointIndex).position);
+                transform.rotation = Quaternion.Lerp(prevWaypoint.rotation, waypoints.ElementAt(currentWaypointIndex).rotation, t);
+                traveledThisStep = distToTravelThisStep;
             }
         }
     }
