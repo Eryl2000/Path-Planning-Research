@@ -131,50 +131,50 @@ public class RRT
         const int numPoints = 10;
 
         actor.transform.position = start.position;
-        float velDirection = Mathf.Rad2Deg * Mathf.Atan2(start.velocity.x, start.velocity.z);
+        float velDirection = Mathf.Atan2(start.velocity.x, start.velocity.z);
         Vector3 forward = start.velocity.normalized;
         Vector3 diff = goalState.position - start.position;
-        Vector3 x = diff - Vector3.Project(diff, forward);
-        float radius = Vector3.SqrMagnitude(diff) / (2.0f * Vector3.Magnitude(x));
+        Vector3 radialComponent = diff - Vector3.Project(diff, forward);
+        float radius = Vector3.SqrMagnitude(diff) / (2.0f * Vector3.Magnitude(radialComponent));
         if (radius < minTurningRadius)
         {
             newState = State.Undefined;
             return false;
         }
-        x = Vector3.Normalize(x);
+        radialComponent = Vector3.Normalize(radialComponent);
 
-        float totalAngle = Vector3.SignedAngle(-x, goalState.position - (start.position + radius * x), Vector3.up);
-        if (Vector3.Dot(forward, diff) < 0)
-        {
-            totalAngle -= Mathf.Sign(totalAngle) * 360.0f;
-        }
-        float angleIncrement = Mathf.Sign(totalAngle) * (360.0f * epsilon / (2 * Mathf.PI * radius)) / (numPoints - 1.0f);
-        if (Mathf.Abs(totalAngle / (numPoints - 1.0f)) < Mathf.Abs(angleIncrement))
-        {
-            angleIncrement = totalAngle / (numPoints - 1.0f);
-        }
         Color randColor = new Color(Random.value, Random.value, Random.value);
         float curAngleOffset = 0;
         Vector3 point1 = start.position;
         Vector3 point2 = Vector3.positiveInfinity;
+
+        float angleToTravel = Mathf.Deg2Rad * Vector3.SignedAngle(-radialComponent, goalState.position - (start.position + radius * radialComponent), Vector3.up);
+        if (Vector3.Dot(forward, diff) < 0)
+        {
+            angleToTravel -= Mathf.Sign(angleToTravel) * 2 * Mathf.PI;
+        }
+        if (epsilon / radius < Mathf.Abs(angleToTravel))
+        {
+            angleToTravel = Mathf.Sign(angleToTravel) * (epsilon / radius);
+        }
         for (int i = 0; i < numPoints; ++i)
         {
-            float pointingAngle = velDirection + curAngleOffset;
-            newState = new State(point1, Quaternion.Euler(0.0f, pointingAngle, 0.0f), new Vector3(Mathf.Sin(Mathf.Deg2Rad * pointingAngle), 0.0f, Mathf.Cos(Mathf.Deg2Rad * pointingAngle)));
+            float curForwardAngle = velDirection + curAngleOffset;
+            newState = new State(point1, Quaternion.Euler(0.0f, Mathf.Rad2Deg * curForwardAngle, 0.0f), new Vector3(Mathf.Sin(curForwardAngle), 0.0f, Mathf.Cos(curForwardAngle)));
             if (actor.HitsObstacle(newState))
             {
                 newState = State.Undefined;
                 return false;
             }
-            curAngleOffset += angleIncrement;
-            float rad_curAngleOffset = Mathf.Deg2Rad * curAngleOffset;
-            point2 = start.position + radius * new Vector3(x.x * (1.0f - Mathf.Cos(rad_curAngleOffset)) - x.z * Mathf.Sin(rad_curAngleOffset), 0.0f, x.z * (1.0f - Mathf.Cos(rad_curAngleOffset)) + x.x * Mathf.Sin(rad_curAngleOffset));
+            curAngleOffset = i * angleToTravel / (numPoints - 1.0f);
+            Vector3 rotatedRadialComponent = new Vector3(radialComponent.x * Mathf.Cos(curAngleOffset) + radialComponent.z * Mathf.Sin(curAngleOffset), radialComponent.y, -radialComponent.x * Mathf.Sin(curAngleOffset) + radialComponent.z * Mathf.Cos(curAngleOffset));
+            point2 = start.position + radius * (radialComponent - rotatedRadialComponent);
             DrawLine(point1, point2, randColor, actor.transform, -1);
 
             point1 = point2;
         }
         float endAngle = velDirection + curAngleOffset;
-        newState = new State(point1, Quaternion.Euler(0.0f, endAngle, 0.0f), new Vector3(Mathf.Sin(Mathf.Deg2Rad * endAngle), 0.0f, Mathf.Cos(Mathf.Deg2Rad * endAngle)));
+        newState = new State(point1, Quaternion.Euler(0.0f, Mathf.Rad2Deg * endAngle, 0.0f), new Vector3(Mathf.Sin(endAngle), 0.0f, Mathf.Cos(endAngle)));
         return true;
     }
 
