@@ -107,7 +107,7 @@ public class SceneManager : MonoBehaviour
                 else
                 {
                     State possibleState = new State(hit.point, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), new Vector3(Random.value, 0, Random.value));
-                    if (!actor.HitsObstacle(possibleState))
+                    if (!actor.WouldHitObstacle(possibleState))
                     {
                         startState = possibleState;
                         StartSprite.transform.position = possibleState.position;
@@ -127,7 +127,7 @@ public class SceneManager : MonoBehaviour
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
             {
                 State possibleState = new State(hit.point, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), new Vector3(Random.value, 0, Random.value));
-                if (!actor.HitsObstacle(possibleState))
+                if (!actor.WouldHitObstacle(possibleState))
                 {
                     endState = possibleState;
                     EndSprite.transform.position = possibleState.position;

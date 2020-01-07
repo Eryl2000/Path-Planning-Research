@@ -51,7 +51,7 @@ public class RRT
                 addedNode = true;
                 TreeNode<State> newNode = nearestNeighbor.AddChild(newState);
                 //DrawLine(nearestNeighbor.Value.position, newNode.Value.position, Color.red, actor.transform, -1);
-                if (Vector3.Distance(newNode.Value.position, endState.position) < 1.0)
+                if (Vector3.Distance(newNode.Value.position, endState.position) < actor.WaypointThreshold)
                 {
                     m_endNode = newNode;
                     Successful = true;
@@ -98,7 +98,7 @@ public class RRT
         {
             Vector3 pos = new Vector3(Random.Range(-boardWidth / 2.0f, boardWidth / 2.0f), endState.position.y, Random.Range(-boardHeight / 2.0f, boardHeight / 2.0f));
             Vector3 rot = new Vector3(0.0f, Random.Range(-180.0f, 180.0f), 0.0f);
-            return new State(pos, rot, rot);
+            return new State(pos, rot, rot.y, actor.CruiseSpeed);
         }
     }
 
@@ -126,8 +126,8 @@ public class RRT
 
     private bool StepTowards(State start, State goalState, Actor actor, ref State newState)
     {
-        const float epsilon = 7.0f;
-        const float minTurningRadius = 1.5f;
+        const float epsilon = 70.0f;
+        const float minTurningRadius = 25f;
         const int numPoints = 10;
 
         actor.transform.position = start.position;
@@ -160,8 +160,8 @@ public class RRT
         for (int i = 0; i < numPoints; ++i)
         {
             float curForwardAngle = velDirection + curAngleOffset;
-            newState = new State(point1, Quaternion.Euler(0.0f, Mathf.Rad2Deg * curForwardAngle, 0.0f), new Vector3(Mathf.Sin(curForwardAngle), 0.0f, Mathf.Cos(curForwardAngle)));
-            if (actor.HitsObstacle(newState))
+            newState = new State(point1, Quaternion.Euler(0.0f, Mathf.Rad2Deg * curForwardAngle, 0.0f), Mathf.Rad2Deg * curForwardAngle, actor.CruiseSpeed);
+            if (actor.WouldHitObstacle(newState))
             {
                 newState = State.Undefined;
                 return false;
@@ -174,7 +174,7 @@ public class RRT
             point1 = point2;
         }
         float endAngle = velDirection + curAngleOffset;
-        newState = new State(point1, Quaternion.Euler(0.0f, Mathf.Rad2Deg * endAngle, 0.0f), new Vector3(Mathf.Sin(endAngle), 0.0f, Mathf.Cos(endAngle)));
+        newState = new State(point1, Quaternion.Euler(0.0f, Mathf.Rad2Deg * endAngle, 0.0f), Mathf.Rad2Deg * endAngle, actor.CruiseSpeed);
         return true;
     }
 
@@ -203,7 +203,7 @@ public class RRT
         LineRenderer lr = myLine.GetComponent<LineRenderer>();
         lr.material = new Material(Shader.Find("Unlit/Color"));
         lr.material.color = color;
-        lr.startWidth = lr.endWidth = 0.2f;
+        lr.startWidth = lr.endWidth = 5.0f;
         lr.SetPosition(0, start);
         lr.SetPosition(1, end);
         if (duration >= 0.0f)
