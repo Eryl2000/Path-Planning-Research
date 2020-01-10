@@ -33,21 +33,29 @@ public class Actor : MonoBehaviour
         waypoints.Clear();
     }
 
-    public bool WouldHitObstacle(State state)
+    public State GetCurState()
     {
-        Vector3 prevPosition = transform.position;
-        transform.position = state.position;
-        transform.rotation = state.rotation;
-        Collider[] colliderHits = Physics.OverlapBox(transform.position, GetComponent<Collider>().bounds.extents, transform.rotation, 1 << LayerMask.NameToLayer("Obstacles"));
+        return new State(transform.position, new Vector3(0.0f, Angle, 0.0f), Speed * transform.forward);
+    }
+
+    public void SetCurState(State newState)
+    {
+        transform.position = newState.position;
+        transform.rotation = newState.rotation;
+        Angle = newState.rotation.eulerAngles.y;
+        Speed = newState.velocity.magnitude;
+    }
+
+    public bool WouldHitObstacle(State testState)
+    {
+        Collider[] colliderHits = Physics.OverlapBox(testState.position, GetComponent<Collider>().bounds.extents, testState.rotation/*, 1 << LayerMask.NameToLayer("Obstacles")*/);
         foreach (Collider col in colliderHits)
         {
             if (col.gameObject.layer == LayerMask.NameToLayer("Obstacles"))
             {
-                transform.position = prevPosition;
                 return true;
             }
         }
-        transform.position = prevPosition;
         return false;
     }
 
@@ -67,14 +75,45 @@ public class Actor : MonoBehaviour
         }
     }
 
+    public float ClosenessMeasure(State curState, State targetState)
+    {
+        const float noiseRange = 50.0f;
+        float dist = Vector3.Distance(curState.position, targetState.position) + Random.Range(-noiseRange, noiseRange);
+        float minTurningRadius = CruiseSpeed / (MaxTurningRate * Mathf.Deg2Rad);
+        if (dist < minTurningRadius)
+        {
+            float curAngle = curState.rotation.eulerAngles.y;
+            Vector3 forward = new Vector3(Mathf.Sin(Mathf.Deg2Rad * curAngle), 0.0f, Mathf.Cos(Mathf.Deg2Rad * curAngle));
+            if (Vector3.Dot(forward, targetState.position - curState.position) < 0.0f)
+            {
+                return dist + 10f * (minTurningRadius - dist);
+            }
+            return dist + 0f * (minTurningRadius - dist);
+        }
+        return dist;
+    }
+
+    public bool ReachedWaypoint(State curState, State waypoint)
+    {
+        return Vector3.Distance(curState.position, waypoint.position) <= WaypointThreshold;
+    }
+
     void FixedUpdate()
     {
-        if (waypoints.Count == 0)
+        /*if (Input.GetMouseButtonDown(0))
         {
-            return;
-        }
-        //Reached waypoint
-        while (waypoints.Count != 0 && Vector3.Distance(transform.position, waypoints.ElementAt(0).position) <= WaypointThreshold)
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit, 88.7f))
+            {
+                Vector3 hitPoint = new Vector3(hit.point.x, 0.0f, hit.point.z);
+                waypoints.Add(new State(hitPoint, Quaternion.identity, 0.0f, CruiseSpeed));
+                Debug.Log("Closeness measure to origin: " + ClosenessMeasure(new State(Vector3.zero, Quaternion.identity, Vector3.zero), new State(hitPoint, Quaternion.identity, Vector3.zero)));
+            }
+        }*/
+
+        State curState = GetCurState();
+        while (waypoints.Count != 0 && ReachedWaypoint(curState, waypoints.ElementAt(0)))
         {
             waypoints.RemoveAt(0);
         }
@@ -82,75 +121,20 @@ public class Actor : MonoBehaviour
         {
             return;
         }
-
-        State newState = StepTowards(new State(transform.position, transform.rotation, Speed * transform.forward), waypoints.ElementAt(0));
-        transform.position = newState.position;
-        transform.rotation = newState.rotation;
-        Angle = newState.rotation.eulerAngles.y;
-        Speed = newState.velocity.magnitude;
-
-        //Angle
-        /*Vector3 diff = waypoints.ElementAt(0).position - transform.position;
-        float targetAngle = Mathf.Rad2Deg * Mathf.Atan2(diff.x, diff.z);
-        if (targetAngle < 0.0f)
-        {
-            targetAngle += 360.0f;
-        }
-        float angleDiff = targetAngle - Angle;
-        while (angleDiff > 180.0f)
-        {
-            angleDiff -= 360.0f;
-        }
-        while (angleDiff < -180.0f)
-        {
-            angleDiff += 360.0f;
-        }
-        if (Mathf.Abs(angleDiff) <= MaxTurningRate * Time.fixedDeltaTime)
-        {
-            Angle = targetAngle;
-        }
-        else
-        {
-            Angle += Mathf.Sign(angleDiff) * MaxTurningRate * Time.fixedDeltaTime;
-            if (Angle > 360.0f)
-            {
-                Angle -= 360.0f;
-            }
-            else if (Angle < 0.0f)
-            {
-                Angle += 360.0f;
-            }
-        }
-
-        //Speed
-        float accel;
-        float targetSpeed = waypoints.ElementAt(0).velocity.magnitude;
-        if (Speed >= MaxSpeed || targetSpeed > MaxSpeed)
-        {
-            accel = 0.0f;
-            Speed = MaxSpeed;
-        }
-        else if (Mathf.Abs(targetSpeed - Speed) < MaxAcceleration * Time.fixedDeltaTime)
-        {
-            accel = (targetSpeed - Speed) / Time.fixedDeltaTime;
-            Speed = targetSpeed;
-        }
-        else
-        {
-            accel = Mathf.Sign(targetSpeed - Speed) * MaxAcceleration;
-            Speed += accel * Time.fixedDeltaTime;
-        }
-
-        transform.localPosition += transform.forward * (0.5f * accel * Time.fixedDeltaTime * Time.fixedDeltaTime + Speed * Time.fixedDeltaTime);
-        transform.rotation = Quaternion.Euler(0.0f, Angle, 0.0f);*/
+        SetCurState(StepTowards(curState, waypoints.ElementAt(0), Time.fixedDeltaTime));
     }
 
-    public State StepTowards(State start, State target)
+    public State StepTowards(State curState, State targetState, float timeToSimulate)
     {
-        float curAngle = start.rotation.eulerAngles.y;
-        float curSpeed = start.velocity.magnitude;
+        if (ReachedWaypoint(curState, targetState))
+        {
+            return curState;
+        }
+        float curAngle = curState.rotation.eulerAngles.y;
+        float curSpeed = curState.velocity.magnitude;
+
         //Angle
-        Vector3 diff = target.position - transform.position;
+        Vector3 diff = targetState.position - curState.position;
         float targetAngle = Mathf.Rad2Deg * Mathf.Atan2(diff.x, diff.z);
         if (targetAngle < 0.0f)
         {
@@ -165,13 +149,13 @@ public class Actor : MonoBehaviour
         {
             angleDiff += 360.0f;
         }
-        if (Mathf.Abs(angleDiff) <= MaxTurningRate * Time.fixedDeltaTime)
+        if (Mathf.Abs(angleDiff) <= MaxTurningRate * timeToSimulate)
         {
             curAngle = targetAngle;
         }
         else
         {
-            curAngle += Mathf.Sign(angleDiff) * MaxTurningRate * Time.fixedDeltaTime;
+            curAngle += Mathf.Sign(angleDiff) * MaxTurningRate * timeToSimulate;
             if (curAngle > 360.0f)
             {
                 curAngle -= 360.0f;
@@ -184,24 +168,26 @@ public class Actor : MonoBehaviour
 
         //Speed
         float accel;
-        float targetSpeed = target.velocity.magnitude;
+        float targetSpeed = targetState.velocity.magnitude;
         if (curSpeed >= MaxSpeed || targetSpeed > MaxSpeed)
         {
             accel = 0.0f;
             curSpeed = MaxSpeed;
         }
-        else if (Mathf.Abs(targetSpeed - curSpeed) < MaxAcceleration * Time.fixedDeltaTime)
+        else if (Mathf.Abs(targetSpeed - curSpeed) < MaxAcceleration * timeToSimulate)
         {
-            accel = (targetSpeed - curSpeed) / Time.fixedDeltaTime;
+            accel = (targetSpeed - curSpeed) / timeToSimulate;
             curSpeed = targetSpeed;
         }
         else
         {
             accel = Mathf.Sign(targetSpeed - curSpeed) * MaxAcceleration;
-            curSpeed += accel * Time.fixedDeltaTime;
+            curSpeed += accel * timeToSimulate;
         }
 
-        Vector3 newPos = transform.position + transform.forward * (0.5f * accel * Time.fixedDeltaTime * Time.fixedDeltaTime + curSpeed * Time.fixedDeltaTime);
+        //Pack into State object
+        Vector3 forward = new Vector3(Mathf.Sin(Mathf.Deg2Rad * curAngle), 0.0f, Mathf.Cos(Mathf.Deg2Rad * curAngle));
+        Vector3 newPos = curState.position + forward * (0.5f * accel * timeToSimulate * timeToSimulate + curSpeed * timeToSimulate);
         return new State(newPos, new Vector3(0.0f, curAngle, 0.0f), curAngle, curSpeed);
     }
 }

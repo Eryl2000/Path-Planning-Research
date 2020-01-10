@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class RRT
@@ -50,8 +51,7 @@ public class RRT
             {
                 addedNode = true;
                 TreeNode<State> newNode = nearestNeighbor.AddChild(newState);
-                //DrawLine(nearestNeighbor.Value.position, newNode.Value.position, Color.red, actor.transform, -1);
-                if (Vector3.Distance(newNode.Value.position, endState.position) < actor.WaypointThreshold)
+                if (actor.ReachedWaypoint(newNode.Value, endState))
                 {
                     m_endNode = newNode;
                     Successful = true;
@@ -90,7 +90,7 @@ public class RRT
 
     private State GetRandomState()
     {
-        if (Random.value < 0.02)
+        if (Random.value < 0.04)
         {
             return endState;
         }
@@ -105,7 +105,8 @@ public class RRT
     private TreeNode<State> GetNearestNeighbor(State randState, TreeNode<State> tree)
     {
         TreeNode<State> nearestNeighbor = tree;
-        float minDist = Vector3.Distance(randState.position, nearestNeighbor.Value.position);
+        //float minDist = Vector3.Distance(randState.position, nearestNeighbor.Value.position);
+        float minDist = actor.ClosenessMeasure(randState, nearestNeighbor.Value);
         _getNearestNeighbor(randState, ref minDist, ref nearestNeighbor, tree);
         return nearestNeighbor;
     }
@@ -114,7 +115,8 @@ public class RRT
     {
         foreach (var child in node.Children)
         {
-            float newDist = Vector3.Distance(randState.position, child.Value.position);
+            //float newDist = Vector3.Distance(randState.position, child.Value.position);
+            float newDist = actor.ClosenessMeasure(randState, child.Value);
             if (newDist < minDist)
             {
                 minDist = newDist;
@@ -126,55 +128,39 @@ public class RRT
 
     private bool StepTowards(State start, State goalState, Actor actor, ref State newState)
     {
-        const float epsilon = 70.0f;
-        const float minTurningRadius = 25f;
-        const int numPoints = 10;
+        const float timeToSimulate = 8.0f;
+        const int numPoints = 22;
 
-        actor.transform.position = start.position;
-        float velDirection = Mathf.Atan2(start.velocity.x, start.velocity.z);
-        Vector3 forward = start.velocity.normalized;
-        Vector3 diff = goalState.position - start.position;
-        Vector3 radialComponent = diff - Vector3.Project(diff, forward);
-        float radius = Vector3.SqrMagnitude(diff) / (2.0f * Vector3.Magnitude(radialComponent));
-        if (radius < minTurningRadius)
-        {
-            newState = State.Undefined;
-            return false;
-        }
-        radialComponent = Vector3.Normalize(radialComponent);
+        //Store points so we can draw the path after confirming it is valid
+        List<Vector3> points = new List<Vector3>();
+        points.Add(start.position);
 
-        Color randColor = new Color(Random.value, Random.value, Random.value);
-        float curAngleOffset = 0;
-        Vector3 point1 = start.position;
-        Vector3 point2 = Vector3.positiveInfinity;
-
-        float angleToTravel = Mathf.Deg2Rad * Vector3.SignedAngle(-radialComponent, goalState.position - (start.position + radius * radialComponent), Vector3.up);
-        if (Vector3.Dot(forward, diff) < 0)
-        {
-            angleToTravel -= Mathf.Sign(angleToTravel) * 2 * Mathf.PI;
-        }
-        if (epsilon / radius < Mathf.Abs(angleToTravel))
-        {
-            angleToTravel = Mathf.Sign(angleToTravel) * (epsilon / radius);
-        }
+        newState = start;
         for (int i = 0; i < numPoints; ++i)
         {
-            float curForwardAngle = velDirection + curAngleOffset;
-            newState = new State(point1, Quaternion.Euler(0.0f, Mathf.Rad2Deg * curForwardAngle, 0.0f), Mathf.Rad2Deg * curForwardAngle, actor.CruiseSpeed);
+            newState = actor.StepTowards(newState, goalState, timeToSimulate / numPoints);
             if (actor.WouldHitObstacle(newState))
             {
                 newState = State.Undefined;
                 return false;
             }
-            curAngleOffset = i * angleToTravel / (numPoints - 1.0f);
-            Vector3 rotatedRadialComponent = new Vector3(radialComponent.x * Mathf.Cos(curAngleOffset) + radialComponent.z * Mathf.Sin(curAngleOffset), radialComponent.y, -radialComponent.x * Mathf.Sin(curAngleOffset) + radialComponent.z * Mathf.Cos(curAngleOffset));
-            point2 = start.position + radius * (radialComponent - rotatedRadialComponent);
-            DrawLine(point1, point2, randColor, actor.transform, -1);
+            if (actor.ReachedWaypoint(newState, endState))
+            {
+                break;
+            }
 
-            point1 = point2;
+            if(i % 7 == 0)
+            {
+                points.Add(newState.position);
+            }
         }
-        float endAngle = velDirection + curAngleOffset;
-        newState = new State(point1, Quaternion.Euler(0.0f, Mathf.Rad2Deg * endAngle, 0.0f), Mathf.Rad2Deg * endAngle, actor.CruiseSpeed);
+
+        //Draw path
+        Color randColor = new Color(Random.value, Random.value, Random.value);
+        for (int i = 0; i < points.Count - 1; ++i)
+        {
+            DrawLine(points.ElementAt(i), points.ElementAt(i + 1), randColor, actor.transform, -1);
+        }
         return true;
     }
 
