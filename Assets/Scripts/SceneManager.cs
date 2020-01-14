@@ -6,7 +6,9 @@ using UnityEngine.UI;
 
 public class SceneManager : MonoBehaviour
 {
-    public ObstacleManager obstacleManager;
+    private static SceneManager _instance;
+    public static SceneManager Instance { get { return _instance; } }
+
     public Actor actor;
 
     public GameObject GroundPlane;
@@ -25,6 +27,18 @@ public class SceneManager : MonoBehaviour
     RRT rrt;
     float boardWidth;
     float boardHeight;
+
+    private void Awake()
+    {
+        if (_instance != null && _instance != this)
+        {
+            Destroy(this.gameObject);
+        }
+        else
+        {
+            _instance = this;
+        }
+    }
 
     void Start()
     {
@@ -90,7 +104,7 @@ public class SceneManager : MonoBehaviour
                 sceneState = SceneState.None;
                 break;
             case SceneState.RegenerateObstacles:
-                obstacleManager.GenerateObstacles(boardWidth, boardHeight);
+                ObstacleManager.Instance.GenerateObstacles(boardWidth, boardHeight);
                 sceneState = SceneState.None;
                 break;
             case SceneState.None:
@@ -118,7 +132,7 @@ public class SceneManager : MonoBehaviour
                 if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
                 {
                     ResetWidgets();
-                    obstacleManager.CreateObstacle(hit.point);
+                    ObstacleManager.Instance.CreateObstacle(hit.point, ObstacleManager.ObstacleType.Static);
                     sceneState = SceneState.None;
                 }
                 else

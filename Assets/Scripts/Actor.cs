@@ -3,6 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+public static class PotentialFieldData
+{
+    public static float thresholdDist = 10000;
+    public static float attractionCoeff = 800;
+    public static float attractionExp = 1;
+    public static float repulsionCoeff = 600000;
+    public static float repulsionExp = 2;
+
+    public static float targetAttractCoeff = 100000;
+    public static float targetAttractExp = 1;
+}
+
 [RequireComponent(typeof(Collider))]
 public class Actor : MonoBehaviour
 {
@@ -117,9 +129,40 @@ public class Actor : MonoBehaviour
         }
         if (waypoints.Count == 0)
         {
-            return;
+            if (Speed == 0.0f)
+            {
+                return;
+            }
+            State stopped = GetCurState();
+            stopped.position += stopped.velocity * 1000.0f;
+            stopped.velocity = Vector3.zero;
+            SetCurState(StepTowards(curState, stopped, Time.fixedDeltaTime));
         }
-        SetCurState(StepTowards(curState, waypoints.ElementAt(0), Time.fixedDeltaTime));
+        else
+        {
+            SetCurState(StepTowards(curState, waypoints.ElementAt(0), Time.fixedDeltaTime));
+        }
+    }
+
+    private Vector3 GetPotentialVector(Vector3 curPos, Vector3 target)
+    {
+        Vector3 potential = Vector3.zero;
+        foreach (GameObject go in ObstacleManager.Instance.Obstacles)
+        {
+            if (go == this.gameObject) continue;
+            Vector3 diff = go.transform.position - curPos;
+            float dist = diff.magnitude;
+            if (dist < PotentialFieldData.thresholdDist)
+            {
+                dist += 1; //no divide by 0
+                potential -= diff.normalized * PotentialFieldData.repulsionCoeff / Mathf.Pow(dist, PotentialFieldData.repulsionExp);
+            }
+        }
+
+        Vector3 diffTarget = target - curPos;
+        float distTarget = diffTarget.magnitude + 1;
+        potential += diffTarget.normalized * PotentialFieldData.targetAttractCoeff / Mathf.Pow(distTarget, PotentialFieldData.targetAttractExp);
+        return potential;
     }
 
     public State StepTowards(State curState, State targetState, float timeToSimulate)
@@ -130,10 +173,12 @@ public class Actor : MonoBehaviour
         }
         float curAngle = curState.rotation.eulerAngles.y;
         float curSpeed = curState.velocity.magnitude;
+        Vector3 potentialVector = GetPotentialVector(curState.position, targetState.position);
 
         //Angle
-        Vector3 diff = targetState.position - curState.position;
-        float targetAngle = Mathf.Rad2Deg * Mathf.Atan2(diff.x, diff.z);
+        //Vector3 diff = targetState.position - curState.position;
+        //float targetAngle = Mathf.Rad2Deg * Mathf.Atan2(diff.x, diff.z);
+        float targetAngle = Mathf.Rad2Deg * Mathf.Atan2(potentialVector.x, potentialVector.z);
         if (targetAngle < 0.0f)
         {
             targetAngle += 360.0f;
@@ -166,11 +211,18 @@ public class Actor : MonoBehaviour
 
         //Speed
         float accel;
-        float targetSpeed = targetState.velocity.magnitude;
-        if (curSpeed >= MaxSpeed || targetSpeed > MaxSpeed)
+        //float targetSpeed = targetState.velocity.magnitude;
+        float targetSpeed = targetState.velocity.magnitude * 0.5f * (1 + Mathf.Cos(Mathf.Deg2Rad * Vector3.Angle(curState.velocity, potentialVector)));
+        targetSpeed = Mathf.Clamp(targetSpeed, 0.0f, MaxSpeed);
+        if (curSpeed >= MaxSpeed && targetSpeed >= MaxSpeed)
         {
             accel = 0.0f;
             curSpeed = MaxSpeed;
+        }
+        else if (curSpeed <= 0.0f && targetSpeed <= 0.0f)
+        {
+            accel = 0.0f;
+            curSpeed = 0.0f;
         }
         else if (Mathf.Abs(targetSpeed - curSpeed) < MaxAcceleration * timeToSimulate)
         {

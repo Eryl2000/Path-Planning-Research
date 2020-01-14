@@ -37,6 +37,13 @@ public class State
         velocity = speed * new Vector3(Mathf.Sin(Mathf.Deg2Rad * velocityAngle), 0.0f, Mathf.Cos(Mathf.Deg2Rad * velocityAngle));
     }
 
+    public State(State other)
+    {
+        position = other.position;
+        rotation = other.rotation;
+        velocity = other.velocity;
+    }
+
     public static State Undefined { get { return new State(Vector3.positiveInfinity, Quaternion.identity, Vector3.positiveInfinity); } }
 
     public static State Lerp(State start, State end, float t)
