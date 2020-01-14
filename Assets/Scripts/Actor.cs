@@ -78,17 +78,15 @@ public class Actor : MonoBehaviour
     public float ClosenessMeasure(State curState, State targetState)
     {
         const float noiseRange = 50.0f;
-        float dist = Vector3.Distance(curState.position, targetState.position) + Random.Range(-noiseRange, noiseRange);
+        Vector3 diff = targetState.position - curState.position;
+        float dist = diff.magnitude + Random.Range(-noiseRange, noiseRange);
         float minTurningRadius = CruiseSpeed / (MaxTurningRate * Mathf.Deg2Rad);
         if (dist < minTurningRadius)
         {
             float curAngle = curState.rotation.eulerAngles.y;
             Vector3 forward = new Vector3(Mathf.Sin(Mathf.Deg2Rad * curAngle), 0.0f, Mathf.Cos(Mathf.Deg2Rad * curAngle));
-            if (Vector3.Dot(forward, targetState.position - curState.position) < 0.0f)
-            {
-                return dist + 10f * (minTurningRadius - dist);
-            }
-            return dist + 0f * (minTurningRadius - dist);
+            float angleBetween = Mathf.Abs(Vector3.SignedAngle(forward, diff, Vector3.up));
+            return dist + 10.0f / (1.0f + Mathf.Exp(-10.0f * angleBetween / 180.0f + 3));
         }
         return dist;
     }

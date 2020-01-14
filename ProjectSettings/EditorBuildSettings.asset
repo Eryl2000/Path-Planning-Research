@@ -4,5 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/RRT.unity
+    guid: 38e721c821de5b7479fcee1aa47da5e3
   m_configObjects: {}

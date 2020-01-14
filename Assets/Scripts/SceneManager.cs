@@ -39,8 +39,8 @@ public class SceneManager : MonoBehaviour
             for(int j = 0; j < numPoints; ++j)
             {
                 Vector3 pos = new Vector3(0.5f * boardWidth * ((float)i / (numPoints - 1) - 0.5f), 0.0f, 0.5f * boardHeight * ((float)j / (numPoints - 1) - 0.5f));
-                float closeness = actor.ClosenessMeasure(new State(Vector3.zero, new Vector3(0, 45.0f, 0), Vector3.zero), new State(pos, new Vector3(0, 0.0f, 0), Vector3.zero));
-                float t = Mathf.InverseLerp(0, 300, closeness);
+                float closeness = actor.ClosenessMeasure(new State(Vector3.zero, new Vector3(0, 225.0f, 0), Vector3.zero), new State(pos, new Vector3(0, 0.0f, 0), Vector3.zero));
+                float t = Mathf.InverseLerp(0, 200, closeness);
                 Debug.DrawLine(pos - 4f * Vector3.forward, pos + 4f * Vector3.forward, Color.Lerp(Color.red, Color.blue, t), 1000.0f, false);
                 Debug.Log(closeness);
             }
@@ -64,7 +64,7 @@ public class SceneManager : MonoBehaviour
                 actor.ClearWaypoints();
                 actor.SetInvisible();
                 actor.ClearLines();
-                rrt = new RRT(startState, endState, actor, 15000, boardWidth, boardHeight);
+                rrt = new RRT(startState, endState, actor, 50000, boardWidth, boardHeight);
                 sceneState = SceneState.WaitForPath;
                 break;
             case SceneState.WaitForPath:

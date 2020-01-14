@@ -437,7 +437,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 03e612168269cb84fbb9989f16d62c96, type: 2}
+  - {fileID: 2100000, guid: 7bae9888b96b27d4490553646441a3fa, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -529,98 +529,6 @@ MonoBehaviour:
   StartSprite: {fileID: 626614656}
   EndSprite: {fileID: 1783465956}
   LoadingText: {fileID: 369988335}
---- !u!1 &491347591
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 491347595}
-  - component: {fileID: 491347594}
-  - component: {fileID: 491347593}
-  - component: {fileID: 491347592}
-  m_Layer: 0
-  m_Name: Sphere
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!135 &491347592
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 491347591}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!23 &491347593
-MeshRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 491347591}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
---- !u!33 &491347594
-MeshFilter:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 491347591}
-  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
---- !u!4 &491347595
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 491347591}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 157, y: 0, z: 0}
-  m_LocalScale: {x: 20, y: 20, z: 20}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 9
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &534669902
 GameObject:
   m_ObjectHideFlags: 0
@@ -833,7 +741,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 03e612168269cb84fbb9989f16d62c96, type: 2}
+  - {fileID: 2100000, guid: 7bae9888b96b27d4490553646441a3fa, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -926,7 +834,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 0
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -944,15 +852,18 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "This is a demonstration of the A* algorithm for path planning. Select a
-    start and end node and the optimal path will be shown in green. Each obstacle
-    has 16 zones around it which have different strengths of influence (shown as the
-    intensity of red). These zones cost more to travel through, so A* tends to find
-    paths around them unless necessary. The zones are larger on the front and left
-    sides of obstacles, and smaller on the right and back. Zones are colored blue
-    after they have been explored.\n\n\nControls:\n   - Left Click:  Set start node
-    position\n   - Right Click:  Set end node position\n   - R:  Regenerate obstacles\n
-    \  - Alt + Left Click: Create random obstacle at mouse position"
+  m_Text: "RRT Path Planning Algorithm\n\n\nSelect a start and end point and the algorithm
+    will find a path between the two (if possible). The drawn arcs show the possible
+    paths the algorithms has explored so far. Due to the random nature of the algorithm,
+    solutions may take a long time to find in some scenarios. Once a path gets close
+    to the goal, the algorith will stop and a ship will trace the path that has been
+    found.\n\nRRT is an iterative algorithm that quickly explores the available space
+    and uses the first solution found. This means the generated path will not be optimal.
+    The algorithm works by picking a random point, finding the closest existing point,
+    making a path between the two (to a ceratin distance), adding the new endpoint
+    to the tree, and repeating.\n\nControls:\n   Left Click:  Set start point\n   Right
+    Click:  Set end point\n   R:  Regenerate obstacles\n   Alt + Left Click: Create
+    obstacle at mouse position"
 --- !u!222 &839021478
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1077,7 +988,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 03e612168269cb84fbb9989f16d62c96, type: 2}
+  - {fileID: 2100000, guid: 7bae9888b96b27d4490553646441a3fa, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1832,7 +1743,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ObstacleShipPrefab: {fileID: 1493260802953620, guid: e560f7e084da0ed44b9f454eddc25bfb,
     type: 3}
-  numObstacles: 10
+  numObstacles: 50
 --- !u!4 &1856670391
 Transform:
   m_ObjectHideFlags: 0
@@ -1896,7 +1807,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 03e612168269cb84fbb9989f16d62c96, type: 2}
+  - {fileID: 2100000, guid: 7bae9888b96b27d4490553646441a3fa, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1949,6 +1860,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2092357707}
   - component: {fileID: 2092357706}
+  - component: {fileID: 2092357705}
   - component: {fileID: 2092357704}
   m_Layer: 10
   m_Name: GroundPlane
@@ -1971,6 +1883,44 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 14
   m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &2092357705
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2092357703}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: bfce65f61f5ad634dbe157a06a81a673, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
 --- !u!33 &2092357706
 MeshFilter:
   m_ObjectHideFlags: 0
