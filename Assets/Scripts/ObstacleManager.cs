@@ -22,6 +22,7 @@ public class ObstacleManager : MonoBehaviour
 
     private void Awake()
     {
+        //Enforce singleton
         if (_instance != null && _instance != this)
         {
             Destroy(this.gameObject);

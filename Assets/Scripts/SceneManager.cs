@@ -9,10 +9,8 @@ public class SceneManager : MonoBehaviour
     private static SceneManager _instance;
     public static SceneManager Instance { get { return _instance; } }
 
-    public Actor actor;
-
+    public Actor MainActor;
     public GameObject GroundPlane;
-
     public GameObject StartSprite;
     public GameObject EndSprite;
     public GameObject LoadingText;
@@ -25,11 +23,12 @@ public class SceneManager : MonoBehaviour
     State endState;
 
     RRT rrt;
-    float boardWidth;
-    float boardHeight;
+    float boardX;
+    float boardZ;
 
     private void Awake()
     {
+        //Enforce singleton
         if (_instance != null && _instance != this)
         {
             Destroy(this.gameObject);
@@ -42,8 +41,8 @@ public class SceneManager : MonoBehaviour
 
     void Start()
     {
-        boardWidth = GroundPlane.transform.localScale.x * 10.0f;
-        boardHeight = GroundPlane.transform.localScale.z * 10.0f;
+        boardX = GroundPlane.transform.localScale.x * 10.0f;
+        boardZ = GroundPlane.transform.localScale.z * 10.0f;
         startValid = endValid = false;
         sceneState = SceneState.RegenerateObstacles;
 
@@ -64,9 +63,9 @@ public class SceneManager : MonoBehaviour
     void ResetWidgets()
     {
         startValid = endValid = false;
-        actor.ClearWaypoints();
-        actor.SetInvisible();
-        actor.ClearLines();
+        MainActor.ClearWaypoints();
+        MainActor.SetInvisible();
+        MainActor.ClearLines();
         StartSprite.transform.position = EndSprite.transform.position = new Vector3(10000.0f, 0.0f, 0.0f);
     }
 
@@ -75,10 +74,10 @@ public class SceneManager : MonoBehaviour
         switch (sceneState)
         {
             case SceneState.CalculatePath:
-                actor.ClearWaypoints();
-                actor.SetInvisible();
-                actor.ClearLines();
-                rrt = new RRT(startState, endState, actor, 50000, boardWidth, boardHeight);
+                MainActor.ClearWaypoints();
+                MainActor.SetInvisible();
+                MainActor.ClearLines();
+                rrt = new RRT(startState, endState, MainActor, 50000, boardX, boardZ);
                 sceneState = SceneState.WaitForPath;
                 break;
             case SceneState.WaitForPath:
@@ -89,22 +88,22 @@ public class SceneManager : MonoBehaviour
                 }
                 break;
             case SceneState.ShowPath:
-                actor.ClearWaypoints();
-                actor.transform.position = StartSprite.transform.position;
+                MainActor.ClearWaypoints();
+                MainActor.transform.position = StartSprite.transform.position;
                 if (rrt.Successful)
                 {
                     List<State> path = rrt.GetPath();
                     foreach (State state in path)
                     {
-                        actor.AddWaypoint(state);
+                        MainActor.AddWaypoint(state);
                     }
-                    actor.CurState = path.ElementAt(0);
+                    MainActor.CurState = path.ElementAt(0);
                 }
                 rrt = null;
                 sceneState = SceneState.None;
                 break;
             case SceneState.RegenerateObstacles:
-                ObstacleManager.Instance.GenerateObstacles(boardWidth, boardHeight);
+                ObstacleManager.Instance.GenerateObstacles(boardX, boardZ);
                 sceneState = SceneState.None;
                 break;
             case SceneState.None:
@@ -138,7 +137,7 @@ public class SceneManager : MonoBehaviour
                 else
                 {
                     State possibleState = new State(hit.point, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), Random.value, 0.0f);
-                    if (!actor.WouldHitObstacle(possibleState))
+                    if (!MainActor.WouldHitObstacle(possibleState))
                     {
                         startState = possibleState;
                         StartSprite.transform.position = possibleState.position;
@@ -157,8 +156,8 @@ public class SceneManager : MonoBehaviour
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
             {
-                State possibleState = new State(hit.point, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), Random.value, actor.CruiseSpeed);
-                if (!actor.WouldHitObstacle(possibleState))
+                State possibleState = new State(hit.point, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), Random.value, MainActor.CruiseSpeed);
+                if (!MainActor.WouldHitObstacle(possibleState))
                 {
                     endState = possibleState;
                     EndSprite.transform.position = possibleState.position;

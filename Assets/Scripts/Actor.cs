@@ -6,20 +6,30 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class Actor : MonoBehaviour
 {
-    public State CurState;
+    private State _curState;
+    public State CurState {
+        get {
+            return _curState;
+        }
+        set {
+            transform.position = value.position;
+            transform.rotation = value.rotation;
+            _curState = value;
+        }
+    }
+
     public float MaxAcceleration = 1.0f;
     public float MaxTurningRate = 3.0f;
     public float CruiseSpeed = 7.71667f;
     public float MinSpeed = 0.0f;
     public float MaxSpeed = 12.8611f;
-
     public float WaypointDistanceThreshold = 150;
-
     public List<State> waypoints;
 
     void Awake()
     {
         waypoints = new List<State>();
+        CurState = new State(transform.position, transform.rotation, transform.forward);
     }
 
     public void AddWaypoint(State waypoint)
@@ -127,11 +137,11 @@ public class Actor : MonoBehaviour
                 continue;
             }
             Collider col = go.GetComponent<Collider>();
-            if(col == null)
+            if (col == null)
             {
                 continue;
             }
-            Vector3 diff = col.ClosestPoint(curPos)- curPos;
+            Vector3 diff = col.ClosestPoint(curPos) - curPos;
             float dist = diff.magnitude;
             if (dist < PotentialFieldData.thresholdDist)
             {
