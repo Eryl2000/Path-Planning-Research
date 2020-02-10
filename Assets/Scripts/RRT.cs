@@ -160,7 +160,7 @@ public class RRT
         Color randColor = new Color(Random.value, Random.value, Random.value);
         for (int i = 0; i < points.Count - 1; ++i)
         {
-            DrawLine(points.ElementAt(i), points.ElementAt(i + 1), randColor, actor.transform, -1);
+            SceneManager.DrawLine(points.ElementAt(i), points.ElementAt(i + 1), randColor, actor.transform, -1);
         }
         return true;
     }
@@ -185,33 +185,12 @@ public class RRT
                 for (int i = 0; i < 4; ++i)
                 {
                     State temp2 = actor.StepTowards(temp, target, 8.0f / 3.0f);
-                    DrawLine(temp.position, temp2.position, Color.red, actor.transform, -1, 15f, 1);
+                    SceneManager.DrawLine(temp.position, temp2.position, Color.red, actor.transform, -1, 15f, 1);
                     temp = temp2;
                 }
             }
         }
         return path;
-    }
-
-
-    private void DrawLine(Vector3 start, Vector3 end, Color color, Transform parent, float duration = -1.0f, float thickness = 5.0f, int z_index = 0)
-    {
-        start.y += 0.1f;
-        end.y += 0.1f;
-        GameObject myLine = new GameObject("Line");
-        myLine.transform.parent = parent;
-        myLine.transform.position = start;
-        myLine.AddComponent<LineRenderer>();
-        LineRenderer lr = myLine.GetComponent<LineRenderer>();
-        lr.material = new Material(Shader.Find("Unlit/Color"));
-        lr.material.color = color;
-        lr.startWidth = lr.endWidth = thickness;
-        lr.SetPosition(0, start + lr.transform.up * z_index);
-        lr.SetPosition(1, end + lr.transform.up * z_index);
-        if (duration >= 0.0f)
-        {
-            GameObject.Destroy(myLine, duration);
-        }
     }
 
 

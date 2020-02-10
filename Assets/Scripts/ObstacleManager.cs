@@ -2,11 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ObstacleManager : MonoBehaviour
 {
     private static ObstacleManager _instance = null;
     public static ObstacleManager Instance { get { return _instance; } }
+
+    public Actor MainActor;
+    public Toggle ShowWaypointToggle;
 
     public GameObject StaticObstaclePrefab;
     public Actor DynamicObstaclePrefab;
@@ -19,6 +23,21 @@ public class ObstacleManager : MonoBehaviour
 
     float boardWidth = 0.0f;
     float boardHeight = 0.0f;
+
+
+    public void OnShowWaypointsChanged()
+    {
+        MainActor.ShowWaypoints = ShowWaypointToggle.isOn;
+        foreach(GameObject cur in Obstacles)
+        {
+            Actor actor = cur.GetComponent<Actor>();
+            if(actor != null)
+            {
+                actor.ShowWaypoints = ShowWaypointToggle.isOn;
+            }
+        }
+    }
+
 
     private void Awake()
     {

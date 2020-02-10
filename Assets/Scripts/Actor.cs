@@ -25,6 +25,7 @@ public class Actor : MonoBehaviour
     public float MaxSpeed = 12.8611f;
     public float WaypointDistanceThreshold = 150;
     public List<State> waypoints;
+    public bool ShowWaypoints = false;
 
     void Awake()
     {
@@ -124,6 +125,15 @@ public class Actor : MonoBehaviour
         else
         {
             CurState = StepTowards(CurState, waypoints.ElementAt(0), Time.fixedDeltaTime);
+        }
+
+        if (ShowWaypoints && waypoints.Count > 0)
+        {
+            SceneManager.DrawLine(CurState.position, waypoints.ElementAt(0).position, new Color(0, 1, 0, 0.1f), transform, Time.fixedDeltaTime);
+            for (int i = 0; i < waypoints.Count - 1; ++i)
+            {
+                SceneManager.DrawLine(waypoints.ElementAt(i).position, waypoints.ElementAt(i + 1).position, new Color(0, 1, 0, 0.1f), transform, Time.fixedDeltaTime);
+            }
         }
     }
 

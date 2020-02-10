@@ -171,4 +171,25 @@ public class SceneManager : MonoBehaviour
         }
 
     }
+
+
+    public static void DrawLine(Vector3 start, Vector3 end, Color color, Transform parent, float duration = -1.0f, float thickness = 5.0f, int z_index = 0)
+    {
+        start.y += 0.1f;
+        end.y += 0.1f;
+        GameObject myLine = new GameObject("Line");
+        myLine.transform.parent = parent;
+        myLine.transform.position = start;
+        myLine.AddComponent<LineRenderer>();
+        LineRenderer lr = myLine.GetComponent<LineRenderer>();
+        lr.material = new Material(Shader.Find("UI/Unlit/Transparent"));
+        lr.material.color = color;
+        lr.startWidth = lr.endWidth = thickness;
+        lr.SetPosition(0, start + lr.transform.up * z_index);
+        lr.SetPosition(1, end + lr.transform.up * z_index);
+        if (duration >= 0.0f)
+        {
+            GameObject.Destroy(myLine, duration);
+        }
+    }
 }
