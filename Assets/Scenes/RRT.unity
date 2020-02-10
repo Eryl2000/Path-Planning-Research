@@ -851,18 +851,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "RRT Path Planning Algorithm\n\n\nSelect a start and end point and the algorithm
-    will find a path between the two (if possible). The drawn arcs show the possible
-    paths the algorithms has explored so far. Due to the random nature of the algorithm,
-    solutions may take a long time to find in some scenarios. Once a path gets close
-    to the goal, the algorith will stop and a ship will trace the path that has been
-    found.\n\nRRT is an iterative algorithm that quickly explores the available space
-    and uses the first solution found. This means the generated path will not be optimal.
-    The algorithm works by picking a random point, finding the closest existing point,
-    making a path between the two (to a ceratin distance), and adding the new endpoint
-    to the tree.\n\nControls:\n   Left Click:  Set start point\n   Right Click:  Set
-    end point\n   R:  Regenerate obstacles\n   Alt + Left Click: Create obstacle at
-    mouse position"
+  m_Text: "RRT Path Planning Algorithm\n\nControls:\n   Left Click:  Set start point\n
+    \  Right Click:  Set end point\n   R:  Regenerate obstacles\n   Alt + Left Click:
+    Create obstacle at mouse position"
 --- !u!222 &839021478
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1603,7 +1594,7 @@ MonoBehaviour:
   CruiseSpeed: 7.71667
   MinSpeed: 0
   MaxSpeed: 12.8611
-  WaypointThreshold: 150
+  WaypointDistanceThreshold: 150
   waypoints: []
 --- !u!33 &6486321117709336864
 MeshFilter:

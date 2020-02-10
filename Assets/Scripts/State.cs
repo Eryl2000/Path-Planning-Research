@@ -9,6 +9,24 @@ public class State
     public Quaternion rotation;
     public Vector3 velocity;
 
+    public float Speed {
+        get {
+            return velocity.magnitude;
+        }
+        set {
+            velocity = value * velocity.normalized;
+        }
+    }
+
+    public float Angle {
+        get {
+            return rotation.eulerAngles.y;
+        }
+        set {
+            rotation = Quaternion.Euler(0.0f, value, 0.0f);
+        }
+    }
+
     public State(Vector3 _position, Quaternion _rotation, Vector3 _velocity)
     {
         position = _position;

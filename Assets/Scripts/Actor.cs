@@ -3,30 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public static class PotentialFieldData
-{
-    public static float thresholdDist = 10000;
-    public static float attractionCoeff = 800;
-    public static float attractionExp = 1;
-    public static float repulsionCoeff = 600000;
-    public static float repulsionExp = 2;
-
-    public static float targetAttractCoeff = 100000;
-    public static float targetAttractExp = 1;
-}
-
 [RequireComponent(typeof(Collider))]
 public class Actor : MonoBehaviour
 {
-    public float Speed = 0.0f;
-    public float Angle = 0.0f;
+    public State CurState;
     public float MaxAcceleration = 1.0f;
     public float MaxTurningRate = 3.0f;
     public float CruiseSpeed = 7.71667f;
     public float MinSpeed = 0.0f;
     public float MaxSpeed = 12.8611f;
 
-    public float WaypointThreshold = 10;
+    public float WaypointDistanceThreshold = 150;
 
     public List<State> waypoints;
 
@@ -45,22 +32,9 @@ public class Actor : MonoBehaviour
         waypoints.Clear();
     }
 
-    public State GetCurState()
-    {
-        return new State(transform.position, new Vector3(0.0f, Angle, 0.0f), Speed * transform.forward);
-    }
-
-    public void SetCurState(State newState)
-    {
-        transform.position = newState.position;
-        transform.rotation = newState.rotation;
-        Angle = newState.rotation.eulerAngles.y;
-        Speed = newState.velocity.magnitude;
-    }
-
     public bool WouldHitObstacle(State testState)
     {
-        Collider[] colliderHits = Physics.OverlapBox(testState.position, GetComponent<Collider>().bounds.extents, testState.rotation/*, 1 << LayerMask.NameToLayer("Obstacles")*/);
+        Collider[] colliderHits = Physics.OverlapBox(testState.position, GetComponent<Collider>().bounds.extents, testState.rotation);
         foreach (Collider col in colliderHits)
         {
             if (col.gameObject.layer == LayerMask.NameToLayer("Obstacles"))
@@ -95,7 +69,7 @@ public class Actor : MonoBehaviour
         float minTurningRadius = CruiseSpeed / (MaxTurningRate * Mathf.Deg2Rad);
         if (dist < minTurningRadius)
         {
-            float curAngle = curState.rotation.eulerAngles.y;
+            float curAngle = curState.Angle;
             Vector3 forward = new Vector3(Mathf.Sin(Mathf.Deg2Rad * curAngle), 0.0f, Mathf.Cos(Mathf.Deg2Rad * curAngle));
             float angleBetween = Mathf.Abs(Vector3.SignedAngle(forward, diff, Vector3.up));
             return dist + 10.0f / (1.0f + Mathf.Exp(-10.0f * angleBetween / 180.0f + 3));
@@ -105,7 +79,7 @@ public class Actor : MonoBehaviour
 
     public bool ReachedWaypoint(State curState, State waypoint)
     {
-        return Vector3.Distance(curState.position, waypoint.position) <= WaypointThreshold;
+        return Vector3.Distance(curState.position, waypoint.position) <= WaypointDistanceThreshold;
     }
 
     void FixedUpdate()
@@ -122,25 +96,24 @@ public class Actor : MonoBehaviour
             }
         }*/
 
-        State curState = GetCurState();
-        while (waypoints.Count != 0 && ReachedWaypoint(curState, waypoints.ElementAt(0)))
+        while (waypoints.Count != 0 && ReachedWaypoint(CurState, waypoints.ElementAt(0)))
         {
             waypoints.RemoveAt(0);
         }
         if (waypoints.Count == 0)
         {
-            if (Speed == 0.0f)
+            if (CurState.Speed == 0.0f)
             {
                 return;
             }
-            State stopped = GetCurState();
+            State stopped = CurState;
             stopped.position += stopped.velocity * 1000.0f;
             stopped.velocity = Vector3.zero;
-            SetCurState(StepTowards(curState, stopped, Time.fixedDeltaTime));
+            CurState = StepTowards(CurState, stopped, Time.fixedDeltaTime);
         }
         else
         {
-            SetCurState(StepTowards(curState, waypoints.ElementAt(0), Time.fixedDeltaTime));
+            CurState = StepTowards(CurState, waypoints.ElementAt(0), Time.fixedDeltaTime);
         }
     }
 
@@ -149,8 +122,16 @@ public class Actor : MonoBehaviour
         Vector3 potential = Vector3.zero;
         foreach (GameObject go in ObstacleManager.Instance.Obstacles)
         {
-            if (go == this.gameObject) continue;
-            Vector3 diff = go.transform.position - curPos;
+            if (go == this.gameObject)
+            {
+                continue;
+            }
+            Collider col = go.GetComponent<Collider>();
+            if(col == null)
+            {
+                continue;
+            }
+            Vector3 diff = col.ClosestPoint(curPos)- curPos;
             float dist = diff.magnitude;
             if (dist < PotentialFieldData.thresholdDist)
             {
@@ -171,13 +152,11 @@ public class Actor : MonoBehaviour
         {
             return curState;
         }
-        float curAngle = curState.rotation.eulerAngles.y;
-        float curSpeed = curState.velocity.magnitude;
+        float curAngle = curState.Angle;
+        float curSpeed = curState.Speed;
         Vector3 potentialVector = GetPotentialVector(curState.position, targetState.position);
 
         //Angle
-        //Vector3 diff = targetState.position - curState.position;
-        //float targetAngle = Mathf.Rad2Deg * Mathf.Atan2(diff.x, diff.z);
         float targetAngle = Mathf.Rad2Deg * Mathf.Atan2(potentialVector.x, potentialVector.z);
         if (targetAngle < 0.0f)
         {
@@ -211,8 +190,7 @@ public class Actor : MonoBehaviour
 
         //Speed
         float accel;
-        //float targetSpeed = targetState.velocity.magnitude;
-        float targetSpeed = targetState.velocity.magnitude * 0.5f * (1 + Mathf.Cos(Mathf.Deg2Rad * Vector3.Angle(curState.velocity, potentialVector)));
+        float targetSpeed = targetState.Speed * 0.5f * (1 + Mathf.Cos(Mathf.Deg2Rad * Vector3.Angle(curState.velocity, potentialVector)));
         targetSpeed = Mathf.Clamp(targetSpeed, 0.0f, MaxSpeed);
         if (curSpeed >= MaxSpeed && targetSpeed >= MaxSpeed)
         {

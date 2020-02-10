@@ -98,7 +98,7 @@ public class SceneManager : MonoBehaviour
                     {
                         actor.AddWaypoint(state);
                     }
-                    actor.SetCurState(path.ElementAt(0));
+                    actor.CurState = path.ElementAt(0);
                 }
                 rrt = null;
                 sceneState = SceneState.None;

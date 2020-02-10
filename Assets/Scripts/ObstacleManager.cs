@@ -61,7 +61,7 @@ public class ObstacleManager : MonoBehaviour
         else if (type == ObstacleType.Dynamic)
         {
             Actor cur = Instantiate(DynamicObstaclePrefab, pos, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), this.transform);
-            cur.SetCurState(new State(pos, cur.transform.rotation, Vector3.zero));
+            cur.CurState = new State(pos, cur.transform.rotation, Vector3.zero);
             for(int i = 0; i < 4; ++i)
             {
                 Vector3 target = new Vector3(Random.Range(-boardWidth / 2.0f, boardWidth / 2.0f), 0.0f, Random.Range(-boardHeight / 2.0f, boardHeight / 2.0f));
