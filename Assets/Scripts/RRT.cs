@@ -139,7 +139,7 @@ public class RRT
         for (int i = 0; i < numPoints; ++i)
         {
             newState = actor.StepTowards(newState, goalState, timeToSimulate / numPoints);
-            if (actor.WouldHitObstacle(newState))
+            if (actor.WouldHitObject(newState))
             {
                 newState = State.Undefined;
                 return false;

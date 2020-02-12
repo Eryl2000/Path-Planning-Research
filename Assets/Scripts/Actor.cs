@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-[RequireComponent(typeof(Collider))]
+[RequireComponent(typeof(BoxCollider))]
 public class Actor : MonoBehaviour
 {
     private State _curState;
@@ -26,6 +26,7 @@ public class Actor : MonoBehaviour
     public float WaypointDistanceThreshold = 150;
     public List<State> waypoints;
     public bool ShowWaypoints = false;
+    public bool ShowBoundingBox = false;
 
     void Awake()
     {
@@ -33,9 +34,14 @@ public class Actor : MonoBehaviour
         CurState = new State(transform.position, transform.rotation, transform.forward);
     }
 
-    public void AddWaypoint(State waypoint)
+    public void AppendWaypoint(State waypoint)
     {
         waypoints.Add(waypoint);
+    }
+
+    public void InsertWaypoint(State waypoint)
+    {
+        waypoints.Insert(0, waypoint);
     }
 
     public void ClearWaypoints()
@@ -43,7 +49,7 @@ public class Actor : MonoBehaviour
         waypoints.Clear();
     }
 
-    public bool WouldHitObstacle(State testState)
+    public bool WouldHitObject(State testState)
     {
         Collider[] colliderHits = Physics.OverlapBox(testState.position, GetComponent<Collider>().bounds.extents, testState.rotation);
         foreach (Collider col in colliderHits)
@@ -129,18 +135,38 @@ public class Actor : MonoBehaviour
 
         if (ShowWaypoints && waypoints.Count > 0)
         {
-            SceneManager.DrawLine(CurState.position, waypoints.ElementAt(0).position, new Color(0, 1, 0, 0.1f), transform, Time.fixedDeltaTime);
+            Color waypointColor = new Color(0, 1, 0, 0.1f);
+            if (ShowBoundingBox)
+            {
+                waypointColor.a = 0.5f;
+            }
+            SceneManager.DrawLine(CurState.position, waypoints.ElementAt(0).position, waypointColor, transform, Time.fixedDeltaTime);
             for (int i = 0; i < waypoints.Count - 1; ++i)
             {
-                SceneManager.DrawLine(waypoints.ElementAt(i).position, waypoints.ElementAt(i + 1).position, new Color(0, 1, 0, 0.1f), transform, Time.fixedDeltaTime);
+                SceneManager.DrawLine(waypoints.ElementAt(i).position + transform.up, waypoints.ElementAt(i + 1).position + transform.up, waypointColor, transform, Time.fixedDeltaTime);
             }
+        }
+        if (ShowBoundingBox)
+        {
+            Vector3 center = GetComponent<BoxCollider>().center;
+            Vector3 halfSize = GetComponent<BoxCollider>().size / 2.0f;
+            Vector3 frontLeft = transform.TransformPoint(center + new Vector3(-halfSize.x, 1, halfSize.z));
+            Vector3 frontRight = transform.TransformPoint(center + new Vector3(halfSize.x, 1, halfSize.z));
+            Vector3 backLeft = transform.TransformPoint(center + new Vector3(-halfSize.x, 1, -halfSize.z));
+            Vector3 backRight = transform.TransformPoint(center + new Vector3(halfSize.x, 1, -halfSize.z));
+
+            Color outlineColor = new Color(0.2f, 0.81f, 0.2f, 1.0f);
+            SceneManager.DrawLine(frontLeft, frontRight, outlineColor, transform, Time.fixedDeltaTime);
+            SceneManager.DrawLine(frontRight, backRight, outlineColor, transform, Time.fixedDeltaTime);
+            SceneManager.DrawLine(backRight, backLeft, outlineColor, transform, Time.fixedDeltaTime);
+            SceneManager.DrawLine(backLeft, frontLeft, outlineColor, transform, Time.fixedDeltaTime);
         }
     }
 
     private Vector3 GetPotentialVector(Vector3 curPos, Vector3 target)
     {
         Vector3 potential = Vector3.zero;
-        foreach (GameObject go in ObstacleManager.Instance.Obstacles)
+        foreach (GameObject go in ScenarioManager.Instance.Objects)
         {
             if (go == this.gameObject)
             {

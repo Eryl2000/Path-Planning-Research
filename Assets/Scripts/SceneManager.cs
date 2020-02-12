@@ -15,12 +15,13 @@ public class SceneManager : MonoBehaviour
     public GameObject EndSprite;
     public GameObject LoadingText;
 
-    private enum SceneState { None, RegenerateObstacles, CalculatePath, WaitForPath, ShowPath };
+    private enum SceneState { None, RegenerateScenario, CalculatePath, WaitForPath, ShowPath };
     SceneState sceneState;
     bool startValid;
     bool endValid;
     State startState;
     State endState;
+    Actor selectedActor;
 
     RRT rrt;
     float boardX;
@@ -43,8 +44,11 @@ public class SceneManager : MonoBehaviour
     {
         boardX = GroundPlane.transform.localScale.x * 10.0f;
         boardZ = GroundPlane.transform.localScale.z * 10.0f;
+        ScenarioManager.Instance.boardX = boardX;
+        ScenarioManager.Instance.boardZ = boardZ;
         startValid = endValid = false;
-        sceneState = SceneState.RegenerateObstacles;
+        sceneState = SceneState.RegenerateScenario;
+        selectedActor = null;
 
         /*int numPoints = 100;
         for(int i = 0; i < numPoints; ++i)
@@ -95,15 +99,15 @@ public class SceneManager : MonoBehaviour
                     List<State> path = rrt.GetPath();
                     foreach (State state in path)
                     {
-                        MainActor.AddWaypoint(state);
+                        MainActor.AppendWaypoint(state);
                     }
                     MainActor.CurState = path.ElementAt(0);
                 }
                 rrt = null;
                 sceneState = SceneState.None;
                 break;
-            case SceneState.RegenerateObstacles:
-                ObstacleManager.Instance.GenerateObstacles(boardX, boardZ);
+            case SceneState.RegenerateScenario:
+                ScenarioManager.Instance.Scenario = ScenarioManager.ScenarioType.Random;
                 sceneState = SceneState.None;
                 break;
             case SceneState.None:
@@ -119,25 +123,49 @@ public class SceneManager : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.R))
         {
             ResetWidgets();
-            sceneState = SceneState.RegenerateObstacles;
+            sceneState = SceneState.RegenerateScenario;
             LoadingText.SetActive(true);
         }
         else if (Input.GetMouseButtonDown(0))
         {
             RaycastHit hit;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("Obstacles")))
             {
-                if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
+                if (selectedActor != null)
                 {
-                    ResetWidgets();
-                    ObstacleManager.Instance.CreateObstacle(hit.point, ObstacleManager.ObstacleType.Static);
-                    sceneState = SceneState.None;
+                    selectedActor.ShowBoundingBox = false;
+                }
+                Actor actorHit = hit.collider.gameObject.GetComponent<Actor>();
+                if (actorHit == null)
+                {
+                    selectedActor = null;
                 }
                 else
                 {
+                    actorHit.ShowBoundingBox = true;
+                    selectedActor = actorHit;
+                }
+            }
+            else if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
+            {
+                if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
+                {
+                    ScenarioManager.Instance.CreateObject(hit.point, Quaternion.identity, ScenarioManager.ObjectType.Static, null);
+                }
+                else if (selectedActor != null && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
+                {
+                    selectedActor.InsertWaypoint(new State(hit.point, selectedActor.CurState.rotation, selectedActor.CurState.velocity));
+                }
+                else
+                {
+                    if (selectedActor != null)
+                    {
+                        selectedActor.ShowBoundingBox = false;
+                        selectedActor = null;
+                    }
                     State possibleState = new State(hit.point, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), Random.value, 0.0f);
-                    if (!MainActor.WouldHitObstacle(possibleState))
+                    if (!MainActor.WouldHitObject(possibleState))
                     {
                         startState = possibleState;
                         StartSprite.transform.position = possibleState.position;
@@ -157,7 +185,7 @@ public class SceneManager : MonoBehaviour
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
             {
                 State possibleState = new State(hit.point, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), Random.value, MainActor.CruiseSpeed);
-                if (!MainActor.WouldHitObstacle(possibleState))
+                if (!MainActor.WouldHitObject(possibleState))
                 {
                     endState = possibleState;
                     EndSprite.transform.position = possibleState.position;
