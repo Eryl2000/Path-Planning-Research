@@ -9,24 +9,41 @@ public class SceneManager : MonoBehaviour
     private static SceneManager _instance;
     public static SceneManager Instance { get { return _instance; } }
 
-    //public Actor MainActor;
     public GameObject GroundPlane;
-    //public GameObject StartSprite;
-    //public GameObject EndSprite;
     public GameObject LoadingText;
     public float SelectActorDistance;
-
-    //private enum SceneState { None, RegenerateScenario, CalculatePath, WaitForPath, ShowPath };
-    //SceneState sceneState;
-    //bool startValid;
-    //bool endValid;
-    //State startState;
-    //State endState;
-    Actor selectedActor;
-
-    //RRT rrt;
     public float BoardX;
     public float BoardZ;
+
+    public Toggle ShowWaypointToggle;
+    public Dropdown ScenarioSelectorDropdown;
+    public Dropdown AISelectorDropdown;
+    public GameObject SelectedActorPanel;
+
+    private Actor selectedActor;
+    public Actor SelectedActor {
+        get {
+            return selectedActor;
+        }
+        set {
+            if (selectedActor != null)
+            {
+                selectedActor.Selected = false;
+            }
+            if (value == null)
+            {
+                selectedActor = null;
+                SelectedActorPanel.gameObject.SetActive(false);
+            }
+            else
+            {
+                selectedActor = value;
+                selectedActor.Selected = true;
+                SelectedActorPanel.gameObject.SetActive(true);
+                AISelectorDropdown.value = AISelectorDropdown.options.FindIndex(option => option.text == selectedActor.AI.GetName());
+            }
+        }
+    }
 
     private void Awake()
     {
@@ -45,9 +62,7 @@ public class SceneManager : MonoBehaviour
     {
         BoardX = GroundPlane.transform.localScale.x * 10.0f;
         BoardZ = GroundPlane.transform.localScale.z * 10.0f;
-        //startValid = endValid = false;
-        //sceneState = SceneState.RegenerateScenario;
-        selectedActor = null;
+        SelectedActor = null;
 
         /*int numPoints = 100;
         for(int i = 0; i < numPoints; ++i)
@@ -63,67 +78,15 @@ public class SceneManager : MonoBehaviour
         }*/
     }
 
-    /*void ResetWidgets()
-    {
-        startValid = endValid = false;
-        MainActor.ClearWaypoints();
-        MainActor.SetInvisible();
-        MainActor.ClearLines();
-        StartSprite.transform.position = EndSprite.transform.position = new Vector3(10000.0f, 0.0f, 0.0f);
-    }*/
-
     void Update()
     {
         LoadingText.SetActive(false);
-        /*switch (sceneState)
-        {
-            case SceneState.CalculatePath:
-                MainActor.ClearWaypoints();
-                MainActor.SetInvisible();
-                MainActor.ClearLines();
-                rrt = new RRT(startState, endState, MainActor, 50000, boardX, boardZ);
-                sceneState = SceneState.WaitForPath;
-                break;
-            case SceneState.WaitForPath:
-                rrt.NextStep();
-                if (rrt.Finished)
-                {
-                    sceneState = SceneState.ShowPath;
-                }
-                break;
-            case SceneState.ShowPath:
-                MainActor.ClearWaypoints();
-                MainActor.transform.position = StartSprite.transform.position;
-                if (rrt.Successful)
-                {
-                    List<State> path = rrt.GetPath();
-                    foreach (State state in path)
-                    {
-                        MainActor.AppendWaypoint(state);
-                    }
-                    MainActor.CurState = path.ElementAt(0);
-                }
-                rrt = null;
-                sceneState = SceneState.None;
-                break;
-            case SceneState.RegenerateScenario:
-                ScenarioManager.Instance.Scenario = ScenarioManager.ScenarioType.Random;
-                sceneState = SceneState.None;
-                break;
-            case SceneState.None:
-            default:
-                LoadingText.SetActive(false);
-                break;
-        }*/
-
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             Application.Quit();
         }
         if (Input.GetKeyDown(KeyCode.R))
         {
-            //ResetWidgets();
-            //sceneState = SceneState.RegenerateScenario;
             LoadingText.SetActive(true);
             ScenarioManager.Instance.Scenario = ScenarioManager.Instance.Scenario;
         }
@@ -133,37 +96,8 @@ public class SceneManager : MonoBehaviour
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
             {
-                if (selectedActor != null)
-                {
-                    selectedActor.Selected = false;
-                    selectedActor = null;
-                }
-                Actor clicked = GetClickedShip(hit.point);
-                if (clicked != null)
-                {
-                    clicked.Selected = true;
-                    selectedActor = clicked;
-                }
+                SelectedActor = GetClickedShip(hit.point);
             }
-            /*else if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
-            {
-                if (selectedActor != null)
-                {
-                    selectedActor.Selected = false;
-                    selectedActor = null;
-                }
-                State possibleState = new State(hit.point, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), Random.value, 0.0f);
-                if (!MainActor.WouldHitObject(possibleState))
-                {
-                    startState = possibleState;
-                    StartSprite.transform.position = possibleState.position;
-                    startValid = true;
-                    if (startValid && endValid)
-                    {
-                        sceneState = SceneState.CalculatePath;
-                    }
-                }
-            }*/
         }
         if (Input.GetMouseButtonDown(1))
         {
@@ -171,30 +105,18 @@ public class SceneManager : MonoBehaviour
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
             {
-                if (selectedActor != null)
+                if (SelectedActor != null)
                 {
                     if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
                     {
-                        selectedActor.AppendWaypoint(new State(hit.point, selectedActor.CurState.rotation, selectedActor.CurState.velocity));
+                        SelectedActor.AppendWaypoint(new State(hit.point, SelectedActor.CurState.rotation, SelectedActor.CurState.velocity));
                     }
                     else
                     {
-                        selectedActor.ClearWaypoints();
-                        selectedActor.AppendWaypoint(new State(hit.point, selectedActor.CurState.rotation, selectedActor.CurState.velocity));
+                        SelectedActor.ClearWaypoints();
+                        SelectedActor.AppendWaypoint(new State(hit.point, SelectedActor.CurState.rotation, SelectedActor.CurState.velocity));
                     }
                 }
-
-                /*State possibleState = new State(hit.point, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), Random.value, MainActor.ShipData.CruiseSpeed);
-                if (!MainActor.WouldHitObject(possibleState))
-                {
-                    endState = possibleState;
-                    EndSprite.transform.position = possibleState.position;
-                    endValid = true;
-                    if (startValid && endValid)
-                    {
-                        sceneState = SceneState.CalculatePath;
-                    }
-                }*/
             }
         }
         if (Input.GetKeyDown(KeyCode.O))
@@ -204,6 +126,54 @@ public class SceneManager : MonoBehaviour
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
             {
                 ScenarioManager.Instance.CreateObject(hit.point, Quaternion.identity, ScenarioManager.ObjectType.Static, null);
+            }
+        }
+    }
+
+    public void OnScenarioChanged()
+    {
+        string text = ScenarioSelectorDropdown.captionText.text;
+        switch (text)
+        {
+            case "Random":
+                ScenarioManager.Instance.Scenario = ScenarioManager.ScenarioType.Random;
+                break;
+            case "TwoLanesHeadOn":
+                ScenarioManager.Instance.Scenario = ScenarioManager.ScenarioType.TwoLanesHeadOn;
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void OnAIChanged()
+    {
+        if (SelectedActor != null)
+        {
+            string text = AISelectorDropdown.captionText.text;
+            switch (text)
+            {
+                case "Potential Field":
+                    SelectedActor.AI = new AI_PotentialFieldFollowWaypoints(SelectedActor);
+                    break;
+                case "RRT":
+                    SelectedActor.AI = new AI_RRT(SelectedActor);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    public void OnShowWaypointsChanged()
+    {
+        //MainActor.ShowWaypoints = ShowWaypointToggle.isOn;
+        foreach (GameObject cur in ScenarioManager.Instance.Objects)
+        {
+            Actor actor = cur.GetComponent<Actor>();
+            if (actor != null)
+            {
+                actor.ShowWaypoints = ShowWaypointToggle.isOn;
             }
         }
     }

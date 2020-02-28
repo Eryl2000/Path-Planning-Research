@@ -59,6 +59,11 @@ public class AI_RRT : AI_PotentialFieldFollowWaypoints
         }
     }
 
+    public override string GetName()
+    {
+        return "RRT";
+    }
+
     public void NextStep()
     {
         if (finished)
@@ -150,10 +155,6 @@ public class AI_RRT : AI_PotentialFieldFollowWaypoints
         const float timeToSimulate = 60.0f;
         const int numPoints = 3;
 
-        //Store points so we can draw the path after confirming it is valid
-        List<Vector3> points = new List<Vector3>();
-        points.Add(start.position);
-
         newState = start;
         for (int i = 0; i < numPoints; ++i)
         {
@@ -165,22 +166,9 @@ public class AI_RRT : AI_PotentialFieldFollowWaypoints
             }
             if (actor.ReachedWaypoint(newState, targetState))
             {
-                points.Add(newState.position);
                 break;
             }
-
-            //if (i % 7 == 0)
-            //{
-            //    points.Add(newState.position);
-            //}
         }
-
-        //Draw path
-        //Color randColor = new Color(Random.value, Random.value, Random.value);
-        //for (int i = 0; i < points.Count - 1; ++i)
-        //{
-        //    SceneManager.DrawLine(points.ElementAt(i), points.ElementAt(i + 1), randColor, actor.transform, -1);
-        //}
         return true;
     }
 
@@ -192,22 +180,7 @@ public class AI_RRT : AI_PotentialFieldFollowWaypoints
         while (cur != null)
         {
             path.Insert(0, cur.Value);
-
-            //float pointSize = 20.0f;
-            //DrawLine(cur.Value.position - pointSize / 2.0f * Vector3.forward, cur.Value.position + pointSize / 2.0f * Vector3.forward, new Color(0f / 255, 46f / 255, 98f / 255), actor.transform, -1, pointSize, 1);
-            State target = cur.Value;
             cur = cur.Parent;
-
-            if (cur != null)
-            {
-                State temp = cur.Value;
-                for (int i = 0; i < 4; ++i)
-                {
-                    State temp2 = actor.AI.StepTowards(temp, target, 8.0f / 3.0f);
-                    //SceneManager.DrawLine(temp.position, temp2.position, Color.red, actor.transform, -1, 15f, 1);
-                    temp = temp2;
-                }
-            }
         }
         return path;
     }

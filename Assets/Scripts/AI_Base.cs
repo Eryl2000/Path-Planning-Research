@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-abstract public class AIBase
+abstract public class AI_Base
 {
     protected Actor actor;
 
-    protected AIBase(Actor _actor)
+    protected AI_Base(Actor _actor)
     {
         actor = _actor;
     }
@@ -40,4 +40,6 @@ abstract public class AIBase
      * state it can find which is closest to reaching the target.
      */
     public abstract State StepTowards(State curState, State targetState, float dt);
+
+    public abstract string GetName();
 }

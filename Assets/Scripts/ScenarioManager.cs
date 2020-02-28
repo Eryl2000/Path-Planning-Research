@@ -9,10 +9,6 @@ public class ScenarioManager : MonoBehaviour
     private static ScenarioManager _instance = null;
     public static ScenarioManager Instance { get { return _instance; } }
 
-    //public Actor MainActor;
-    public Toggle ShowWaypointToggle;
-    public Dropdown ScenarioSelectorDropdown;
-
     public GameObject StaticObjectPrefab;
     public Actor DynamicObjectPrefab;
     public int numStaticObjects = 10;
@@ -44,39 +40,9 @@ public class ScenarioManager : MonoBehaviour
                 default:
                     break;
             }
-            OnShowWaypointsChanged();
+            SceneManager.Instance.OnShowWaypointsChanged();
         }
     }
-
-    public void OnScenarioChanged()
-    {
-        string text = ScenarioSelectorDropdown.captionText.text;
-        switch (text)
-        {
-            case "Random":
-                Scenario = ScenarioType.Random;
-                break;
-            case "TwoLanesHeadOn":
-                Scenario = ScenarioType.TwoLanesHeadOn;
-                break;
-            default:
-                break;
-        }
-    }
-
-    public void OnShowWaypointsChanged()
-    {
-        //MainActor.ShowWaypoints = ShowWaypointToggle.isOn;
-        foreach (GameObject cur in Objects)
-        {
-            Actor actor = cur.GetComponent<Actor>();
-            if (actor != null)
-            {
-                actor.ShowWaypoints = ShowWaypointToggle.isOn;
-            }
-        }
-    }
-
 
     private void Awake()
     {
@@ -93,7 +59,7 @@ public class ScenarioManager : MonoBehaviour
 
     private void Start()
     {
-        OnScenarioChanged();
+        SceneManager.Instance.OnScenarioChanged();
     }
 
     public void CreateObject(Vector3 pos, Quaternion orientation, ObjectType type, List<State> waypoints)

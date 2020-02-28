@@ -18,7 +18,7 @@ public class Actor : MonoBehaviour
         }
     }
 
-    public AIBase AI;
+    public AI_Base AI;
 
     public ShipData ShipData = new ShipData();
     public List<State> waypoints;

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AI_PotentialFieldFollowWaypoints : AIBase
+public class AI_PotentialFieldFollowWaypoints : AI_Base
 {
     public AI_PotentialFieldFollowWaypoints(Actor _actor) : base(_actor)
     {
@@ -81,6 +81,11 @@ public class AI_PotentialFieldFollowWaypoints : AIBase
         Vector3 forward = new Vector3(Mathf.Sin(Mathf.Deg2Rad * curAngle), 0.0f, Mathf.Cos(Mathf.Deg2Rad * curAngle));
         Vector3 newPos = curState.position + forward * (0.5f * accel * dt * dt + curSpeed * dt);
         return new State(newPos, new Vector3(0.0f, curAngle, 0.0f), curAngle, curSpeed);
+    }
+
+    public override string GetName()
+    {
+        return "Potential Field";
     }
 
 
