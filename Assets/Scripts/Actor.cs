@@ -123,6 +123,20 @@ public class Actor : MonoBehaviour
 
     private void Update()
     {
+        if (Selected)
+        {
+            waypointsLine.material.color = new Color(waypointsLineColor.r, waypointsLineColor.g, waypointsLineColor.b, 0.5f);
+            waypointsLine.startWidth = waypointsLine.endWidth = 2 * lineThickness;
+            boundingBoxLine.material.color = Color.green;
+            boundingBoxLine.startWidth = boundingBoxLine.endWidth = 2 * lineThickness;
+        }
+        else
+        {
+            waypointsLine.material.color = waypointsLineColor;
+            waypointsLine.startWidth = waypointsLine.endWidth = 2 * lineThickness;
+            boundingBoxLine.material.color = boundingBoxLineColor;
+            boundingBoxLine.startWidth = boundingBoxLine.endWidth = lineThickness;
+        }
         if (ShowBoundingBox)
         {
             const int numPoints = 10;
@@ -139,19 +153,23 @@ public class Actor : MonoBehaviour
                 angle += 360.0f / numPoints;
             }
         }
+        else
+        {
+            boundingBoxLine.positionCount = 0;
+        }
 
         if (ShowWaypoints)
         {
-            if (Selected)
-            {
-                waypointsLineColor.a = 0.5f;
-            }
             waypointsLine.positionCount = waypoints.Count + 1;
             waypointsLine.SetPosition(0, transform.position + transform.up * 100.0f);
             for (int i = 0; i < waypoints.Count; ++i)
             {
                 waypointsLine.SetPosition(i + 1, waypoints.ElementAt(i).position + transform.up * 100.0f);
             }
+        }
+        else
+        {
+            waypointsLine.positionCount = 0;
         }
     }
 
@@ -182,11 +200,11 @@ public class Actor : MonoBehaviour
             State stopped = CurState;
             stopped.position += stopped.velocity * 1000.0f;
             stopped.velocity = Vector3.zero;
-            CurState = StepTowards(CurState, stopped, Time.fixedDeltaTime);
+            CurState = StepTowards(CurState, stopped, Time.deltaTime);
         }
         else
         {
-            CurState = StepTowards(CurState, waypoints.ElementAt(0), Time.fixedDeltaTime);
+            CurState = StepTowards(CurState, waypoints.ElementAt(0), Time.deltaTime);
         }
     }
 

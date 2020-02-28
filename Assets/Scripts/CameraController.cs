@@ -15,6 +15,7 @@ public class CameraController : MonoBehaviour
 
     private void Update()
     {
+        velocity = Vector3.zero;
         float multiplier = 1.0f;
         if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
         {
@@ -25,14 +26,22 @@ public class CameraController : MonoBehaviour
         velocity.y = (velocity.y < 0 ? -1.0f : (velocity.y > 0 ? 1.0f : 0.0f)) * Speed * multiplier;
         velocity.z = (velocity.z < 0 ? -1.0f : (velocity.z > 0 ? 1.0f : 0.0f)) * Speed * multiplier;
 
-        velocity.x = Input.GetAxis("Horizontal") * Speed * multiplier;
-        velocity.y = Input.GetAxis("Up/Down") * Speed * multiplier;
-        velocity.z = Input.GetAxis("Vertical") * Speed * multiplier;
+        velocity.x += Input.GetAxis("Horizontal") * Speed * multiplier;
+        velocity.z += Input.GetAxis("Vertical") * Speed * multiplier;
+        if (Input.GetAxis("Mouse ScrollWheel") <= 0 || transform.position.y > 200)
+        {
+            velocity += transform.forward * Input.GetAxis("Mouse ScrollWheel") * 100.0f * Speed * multiplier;
+        }
+        if (Time.timeScale != 0)
+        {
+            transform.position += velocity * Time.deltaTime / Time.timeScale;
+            if (transform.position.y < 200.0f)
+            {
+                transform.position = new Vector3(transform.position.x, 200.0f, transform.position.z);
+            }
+        }
     }
 
 
-    void FixedUpdate()
-    {
-        transform.position += velocity * Time.fixedDeltaTime;
-    }
+
 }
