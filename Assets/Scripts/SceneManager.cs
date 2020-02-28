@@ -9,24 +9,24 @@ public class SceneManager : MonoBehaviour
     private static SceneManager _instance;
     public static SceneManager Instance { get { return _instance; } }
 
-    public Actor MainActor;
+    //public Actor MainActor;
     public GameObject GroundPlane;
-    public GameObject StartSprite;
-    public GameObject EndSprite;
+    //public GameObject StartSprite;
+    //public GameObject EndSprite;
     public GameObject LoadingText;
     public float SelectActorDistance;
 
-    private enum SceneState { None, RegenerateScenario, CalculatePath, WaitForPath, ShowPath };
-    SceneState sceneState;
-    bool startValid;
-    bool endValid;
-    State startState;
-    State endState;
+    //private enum SceneState { None, RegenerateScenario, CalculatePath, WaitForPath, ShowPath };
+    //SceneState sceneState;
+    //bool startValid;
+    //bool endValid;
+    //State startState;
+    //State endState;
     Actor selectedActor;
 
-    RRT rrt;
-    float boardX;
-    float boardZ;
+    //RRT rrt;
+    public float BoardX;
+    public float BoardZ;
 
     private void Awake()
     {
@@ -43,12 +43,10 @@ public class SceneManager : MonoBehaviour
 
     void Start()
     {
-        boardX = GroundPlane.transform.localScale.x * 10.0f;
-        boardZ = GroundPlane.transform.localScale.z * 10.0f;
-        ScenarioManager.Instance.boardX = boardX;
-        ScenarioManager.Instance.boardZ = boardZ;
-        startValid = endValid = false;
-        sceneState = SceneState.RegenerateScenario;
+        BoardX = GroundPlane.transform.localScale.x * 10.0f;
+        BoardZ = GroundPlane.transform.localScale.z * 10.0f;
+        //startValid = endValid = false;
+        //sceneState = SceneState.RegenerateScenario;
         selectedActor = null;
 
         /*int numPoints = 100;
@@ -65,18 +63,19 @@ public class SceneManager : MonoBehaviour
         }*/
     }
 
-    void ResetWidgets()
+    /*void ResetWidgets()
     {
         startValid = endValid = false;
         MainActor.ClearWaypoints();
         MainActor.SetInvisible();
         MainActor.ClearLines();
         StartSprite.transform.position = EndSprite.transform.position = new Vector3(10000.0f, 0.0f, 0.0f);
-    }
+    }*/
 
     void Update()
     {
-        switch (sceneState)
+        LoadingText.SetActive(false);
+        /*switch (sceneState)
         {
             case SceneState.CalculatePath:
                 MainActor.ClearWaypoints();
@@ -115,7 +114,7 @@ public class SceneManager : MonoBehaviour
             default:
                 LoadingText.SetActive(false);
                 break;
-        }
+        }*/
 
         if (Input.GetKeyDown(KeyCode.Escape))
         {
@@ -123,9 +122,10 @@ public class SceneManager : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.R))
         {
-            ResetWidgets();
-            sceneState = SceneState.RegenerateScenario;
+            //ResetWidgets();
+            //sceneState = SceneState.RegenerateScenario;
             LoadingText.SetActive(true);
+            ScenarioManager.Instance.Scenario = ScenarioManager.Instance.Scenario;
         }
         if (Input.GetMouseButtonDown(0))
         {
@@ -145,7 +145,7 @@ public class SceneManager : MonoBehaviour
                     selectedActor = clicked;
                 }
             }
-            else if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
+            /*else if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
             {
                 if (selectedActor != null)
                 {
@@ -163,7 +163,7 @@ public class SceneManager : MonoBehaviour
                         sceneState = SceneState.CalculatePath;
                     }
                 }
-            }
+            }*/
         }
         if (Input.GetMouseButtonDown(1))
         {
@@ -184,7 +184,7 @@ public class SceneManager : MonoBehaviour
                     }
                 }
 
-                State possibleState = new State(hit.point, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), Random.value, MainActor.ShipData.CruiseSpeed);
+                /*State possibleState = new State(hit.point, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), Random.value, MainActor.ShipData.CruiseSpeed);
                 if (!MainActor.WouldHitObject(possibleState))
                 {
                     endState = possibleState;
@@ -194,7 +194,7 @@ public class SceneManager : MonoBehaviour
                     {
                         sceneState = SceneState.CalculatePath;
                     }
-                }
+                }*/
             }
         }
         if (Input.GetKeyDown(KeyCode.O))

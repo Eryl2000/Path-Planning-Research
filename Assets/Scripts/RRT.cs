@@ -2,68 +2,100 @@
 using System.Linq;
 using UnityEngine;
 
-public class RRT
+public class AI_RRT : AI_PotentialFieldFollowWaypoints
 {
-    public bool Successful;
-    public bool Finished;
+    public int maxNumNodes;
 
-    TreeNode<State> tree = null;
-    State startState;
-    State endState;
-    Actor actor;
+    bool successful;
+    bool finished;
+    TreeNode<State> treeBase;
+    State targetState;
+    TreeNode<State> finalNodeAtTarget;
     int numNodesAdded;
-    int maxNumNodes;
-    float boardWidth;
-    float boardHeight;
 
-    TreeNode<State> m_endNode;
-
-    public RRT(State _startState, State _endState, Actor _actor, int _maxNumNodes, float _boardWidth, float _boardHeight)
+    public AI_RRT(Actor _actor) : base(_actor)
     {
-        startState = _startState;
-        endState = _endState;
-        actor = _actor;
+        finished = successful = false;
+        maxNumNodes = 50000;
         numNodesAdded = 0;
-        maxNumNodes = _maxNumNodes;
-        boardWidth = _boardWidth;
-        boardHeight = _boardHeight;
+        treeBase = null;
+        targetState = null;
+        finalNodeAtTarget = null;
+    }
 
-        Finished = Successful = false;
-        tree = new TreeNode<State>(_startState);
+    public override List<State> UpdateWaypoints(State curState, State targetState, List<State> currentWaypoints)
+    {
+        if (treeBase == null)
+        {
+            treeBase = new TreeNode<State>(curState);
+            this.targetState = targetState;
+        }
+        for (int i = 0; i < 10; ++i)
+        {
+            NextStep();
+        }
+        if (finished)
+        {
+            finished = false;
+            List<State> ret;
+            if (successful)
+            {
+                successful = false;
+                ret = CreatePathFromTree(finalNodeAtTarget);
+            }
+            else
+            {
+                ret = currentWaypoints;
+            }
+            treeBase = null;
+            this.targetState = null;
+            finalNodeAtTarget = null;
+
+            return ret;
+        }
+        else
+        {
+            return currentWaypoints;
+        }
     }
 
     public void NextStep()
     {
+        if (finished)
+        {
+            return;
+        }
+        const int maxTriesToAddNode = 10000;
         int triesToAddNode = 0;
         bool addedNode;
         do
         {
             addedNode = false;
             State randState = GetRandomState();
-            TreeNode<State> nearestNeighbor = GetNearestNeighbor(randState, tree);
+            TreeNode<State> nearestNeighbor = GetNearestNeighbor(randState);
 
             //Select input to use
             //For now any input is valid
 
             //Determine new state
             State newState = State.Undefined;
-            if (StepTowards(nearestNeighbor.Value, randState, actor, ref newState))
+            if (TryStepTowards(nearestNeighbor.Value, randState, actor, ref newState))
             {
                 addedNode = true;
                 TreeNode<State> newNode = nearestNeighbor.AddChild(newState);
-                if (actor.ReachedWaypoint(newNode.Value, endState))
+                if (actor.ReachedWaypoint(newNode.Value, targetState))
                 {
-                    m_endNode = newNode;
-                    Successful = true;
-                    Finished = true;
+                    finalNodeAtTarget = newNode;
+                    successful = true;
+                    finished = true;
                     return;
                 }
             }
             triesToAddNode += 1;
-            if (triesToAddNode > 10000)
+            if (triesToAddNode > maxTriesToAddNode)
             {
-                Successful = false;
-                Finished = false;
+                successful = false;
+                finished = true;
                 return;
             }
         } while (!addedNode);
@@ -71,43 +103,31 @@ public class RRT
         numNodesAdded++;
         if (numNodesAdded >= maxNumNodes)
         {
-            Successful = false;
-            Finished = true;
+            successful = false;
+            finished = true;
         }
     }
 
-    public List<State> GetPath()
-    {
-        if (Finished && Successful)
-        {
-            return CreatePathFromTree(tree, m_endNode);
-        }
-        else
-        {
-            return null;
-        }
-    }
 
     private State GetRandomState()
     {
         if (Random.value < 0.04)
         {
-            return endState;
+            return targetState;
         }
         else
         {
-            Vector3 pos = new Vector3(Random.Range(-boardWidth / 2.0f, boardWidth / 2.0f), endState.position.y, Random.Range(-boardHeight / 2.0f, boardHeight / 2.0f));
+            Vector3 pos = new Vector3(Random.Range(-SceneManager.Instance.BoardX / 2.0f, SceneManager.Instance.BoardX / 2.0f), targetState.position.y, Random.Range(-SceneManager.Instance.BoardZ / 2.0f, SceneManager.Instance.BoardZ / 2.0f));
             Vector3 rot = new Vector3(0.0f, Random.Range(-180.0f, 180.0f), 0.0f);
             return new State(pos, rot, rot.y, actor.ShipData.CruiseSpeed);
         }
     }
 
-    private TreeNode<State> GetNearestNeighbor(State randState, TreeNode<State> tree)
+    private TreeNode<State> GetNearestNeighbor(State randState)
     {
-        TreeNode<State> nearestNeighbor = tree;
-        //float minDist = Vector3.Distance(randState.position, nearestNeighbor.Value.position);
+        TreeNode<State> nearestNeighbor = treeBase;
         float minDist = actor.ClosenessMeasure(randState, nearestNeighbor.Value);
-        _getNearestNeighbor(randState, ref minDist, ref nearestNeighbor, tree);
+        _getNearestNeighbor(randState, ref minDist, ref nearestNeighbor, treeBase);
         return nearestNeighbor;
     }
 
@@ -115,7 +135,6 @@ public class RRT
     {
         foreach (var child in node.Children)
         {
-            //float newDist = Vector3.Distance(randState.position, child.Value.position);
             float newDist = actor.ClosenessMeasure(randState, child.Value);
             if (newDist < minDist)
             {
@@ -126,10 +145,10 @@ public class RRT
         }
     }
 
-    private bool StepTowards(State start, State goalState, Actor actor, ref State newState)
+    private bool TryStepTowards(State start, State goalState, Actor actor, ref State newState)
     {
-        const float timeToSimulate = 8.0f;
-        const int numPoints = 22;
+        const float timeToSimulate = 60.0f;
+        const int numPoints = 3;
 
         //Store points so we can draw the path after confirming it is valid
         List<Vector3> points = new List<Vector3>();
@@ -138,35 +157,35 @@ public class RRT
         newState = start;
         for (int i = 0; i < numPoints; ++i)
         {
-            newState = actor.AI.StepTowards(newState, goalState, timeToSimulate / numPoints);
+            newState = base.StepTowards(newState, goalState, timeToSimulate / numPoints);
             if (actor.WouldHitObject(newState))
             {
                 newState = State.Undefined;
                 return false;
             }
-            if (actor.ReachedWaypoint(newState, endState))
+            if (actor.ReachedWaypoint(newState, targetState))
             {
                 points.Add(newState.position);
                 break;
             }
 
-            if (i % 7 == 0)
-            {
-                points.Add(newState.position);
-            }
+            //if (i % 7 == 0)
+            //{
+            //    points.Add(newState.position);
+            //}
         }
 
         //Draw path
-        Color randColor = new Color(Random.value, Random.value, Random.value);
-        for (int i = 0; i < points.Count - 1; ++i)
-        {
-            SceneManager.DrawLine(points.ElementAt(i), points.ElementAt(i + 1), randColor, actor.transform, -1);
-        }
+        //Color randColor = new Color(Random.value, Random.value, Random.value);
+        //for (int i = 0; i < points.Count - 1; ++i)
+        //{
+        //    SceneManager.DrawLine(points.ElementAt(i), points.ElementAt(i + 1), randColor, actor.transform, -1);
+        //}
         return true;
     }
 
 
-    private List<State> CreatePathFromTree(TreeNode<State> tree, TreeNode<State> endNode)
+    private List<State> CreatePathFromTree(TreeNode<State> endNode)
     {
         List<State> path = new List<State>();
         TreeNode<State> cur = endNode;
@@ -185,7 +204,7 @@ public class RRT
                 for (int i = 0; i < 4; ++i)
                 {
                     State temp2 = actor.AI.StepTowards(temp, target, 8.0f / 3.0f);
-                    SceneManager.DrawLine(temp.position, temp2.position, Color.red, actor.transform, -1, 15f, 1);
+                    //SceneManager.DrawLine(temp.position, temp2.position, Color.red, actor.transform, -1, 15f, 1);
                     temp = temp2;
                 }
             }

@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AIPotentialFieldFollowWaypoints : AIBase
+public class AI_PotentialFieldFollowWaypoints : AIBase
 {
-    public AIPotentialFieldFollowWaypoints(Actor _actor) : base(_actor)
+    public AI_PotentialFieldFollowWaypoints(Actor _actor) : base(_actor)
     {
 
     }
 
-    public override List<State> UpdateWaypoints(List<State> currentWaypoints)
+    public override List<State> UpdateWaypoints(State curState, State targetState, List<State> currentWaypoints)
     {
         return currentWaypoints;
     }

@@ -52,7 +52,7 @@ public class Actor : MonoBehaviour
         waypointsLine.material.color = waypointsLineColor;
         waypointsLine.startWidth = waypointsLine.endWidth = lineThickness;
 
-        AI = new AIPotentialFieldFollowWaypoints(this);
+        AI = new AI_PotentialFieldFollowWaypoints(this);
     }
 
     public void AppendWaypoint(State waypoint)
@@ -75,7 +75,7 @@ public class Actor : MonoBehaviour
         Collider[] colliderHits = Physics.OverlapBox(testState.position, GetComponent<Collider>().bounds.extents, testState.rotation);
         foreach (Collider col in colliderHits)
         {
-            if (col.gameObject.layer == LayerMask.NameToLayer("Obstacles"))
+            if (col.gameObject.layer == LayerMask.NameToLayer("Obstacles") && col.gameObject != gameObject)
             {
                 return true;
             }
@@ -197,7 +197,10 @@ public class Actor : MonoBehaviour
         }
         else
         {
-            waypoints = AI.UpdateWaypoints(waypoints);
+            if(waypoints.Count != 0)
+            {
+                waypoints = AI.UpdateWaypoints(CurState, waypoints.Last(), waypoints);
+            }
             CurState = AI.StepTowards(CurState, waypoints.ElementAt(0), Time.deltaTime);
         }
     }

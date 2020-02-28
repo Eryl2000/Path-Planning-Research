@@ -10,5 +10,5 @@ public class ShipData
     public float CruiseSpeed = 7.71667f;
     public float MinSpeed = 0.0f;
     public float MaxSpeed = 12.8611f;
-    public float WaypointDistanceThreshold = 150;
+    public float WaypointDistanceThreshold = 1000;
 }

@@ -9,7 +9,7 @@ public class ScenarioManager : MonoBehaviour
     private static ScenarioManager _instance = null;
     public static ScenarioManager Instance { get { return _instance; } }
 
-    public Actor MainActor;
+    //public Actor MainActor;
     public Toggle ShowWaypointToggle;
     public Dropdown ScenarioSelectorDropdown;
 
@@ -48,9 +48,6 @@ public class ScenarioManager : MonoBehaviour
         }
     }
 
-    public float boardX = 0.0f;
-    public float boardZ = 0.0f;
-
     public void OnScenarioChanged()
     {
         string text = ScenarioSelectorDropdown.captionText.text;
@@ -69,7 +66,7 @@ public class ScenarioManager : MonoBehaviour
 
     public void OnShowWaypointsChanged()
     {
-        MainActor.ShowWaypoints = ShowWaypointToggle.isOn;
+        //MainActor.ShowWaypoints = ShowWaypointToggle.isOn;
         foreach (GameObject cur in Objects)
         {
             Actor actor = cur.GetComponent<Actor>();
@@ -92,6 +89,11 @@ public class ScenarioManager : MonoBehaviour
         {
             _instance = this;
         }
+    }
+
+    private void Start()
+    {
+        OnScenarioChanged();
     }
 
     public void CreateObject(Vector3 pos, Quaternion orientation, ObjectType type, List<State> waypoints)
@@ -129,28 +131,55 @@ public class ScenarioManager : MonoBehaviour
     {
         for (int i = 0; i < numStaticObjects; ++i)
         {
-            Vector3 pos = new Vector3(Random.Range(-boardX / 2.0f, boardX / 2.0f), 0.0f, Random.Range(-boardZ / 2.0f, boardZ / 2.0f));
+            Vector3 pos = new Vector3(Random.Range(-SceneManager.Instance.BoardX / 2.0f, SceneManager.Instance.BoardX / 2.0f), 0.0f, Random.Range(-SceneManager.Instance.BoardZ / 2.0f, SceneManager.Instance.BoardZ / 2.0f));
             Quaternion orientation = Quaternion.Euler(0, Random.Range(-180.0f, 180.0f), 0);
             CreateObject(pos, orientation, ObjectType.Static, null);
         }
         for (int i = 0; i < numDynamicObjects; ++i)
         {
-            Vector3 pos = new Vector3(Random.Range(-boardX / 2.0f, boardX / 2.0f), 0.0f, Random.Range(-boardZ / 2.0f, boardZ / 2.0f));
-            Quaternion orientation = Quaternion.Euler(0, Random.Range(-180.0f, 180.0f), 0);
+            State state = GetEmptySpot();
             List<State> waypoints = new List<State>();
             for (int w = 0; w < 3; ++w)
             {
-                Vector3 target = new Vector3(Random.Range(-boardX / 2.0f, boardX / 2.0f), 0.0f, Random.Range(-boardZ / 2.0f, boardZ / 2.0f));
-                waypoints.Add(new State(target, new Vector3(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), 0.0f, DynamicObjectPrefab.ShipData.CruiseSpeed));
+                waypoints.Add(GetEmptySpot());
             }
-            CreateObject(pos, orientation, ObjectType.Dynamic, waypoints);
+            CreateObject(state.position, state.rotation, ObjectType.Dynamic, waypoints);
+
+            if (i == 0)
+            {
+                DynamicObjects.ElementAt(0).GetComponent<Actor>().AI = new AI_RRT(DynamicObjects.ElementAt(0).GetComponent<Actor>());
+            }
         }
+    }
+
+    private State GetEmptySpot()
+    {
+        bool succesfulPoint;
+        Vector3 pos;
+        Quaternion orientation;
+        do
+        {
+            succesfulPoint = true;
+            pos = new Vector3(Random.Range(-SceneManager.Instance.BoardX / 2.0f, SceneManager.Instance.BoardX / 2.0f), 0.0f, Random.Range(-SceneManager.Instance.BoardZ / 2.0f, SceneManager.Instance.BoardZ / 2.0f));
+            orientation = Quaternion.Euler(0, Random.Range(-180.0f, 180.0f), 0);
+
+            Collider[] colliderHits = Physics.OverlapBox(pos, DynamicObjectPrefab.GetComponent<Collider>().bounds.extents, orientation);
+            foreach (Collider col in colliderHits)
+            {
+                if (col.gameObject.layer == LayerMask.NameToLayer("Obstacles"))
+                {
+                    succesfulPoint = false;
+                    break;
+                }
+            }
+        } while (!succesfulPoint);
+        return new State(pos, orientation, orientation.eulerAngles.y, DynamicObjectPrefab.ShipData.CruiseSpeed);
     }
 
     private void GenerateTwoLanesHeadOn()
     {
-        Vector3 location1 = new Vector3(-boardX * 0.3f, 0.0f, 0.0f);
-        Vector3 location2 = new Vector3(boardX * 0.3f, 0.0f, -boardZ * 0.1f);
+        Vector3 location1 = new Vector3(-SceneManager.Instance.BoardX * 0.3f, 0.0f, 0.0f);
+        Vector3 location2 = new Vector3(SceneManager.Instance.BoardX * 0.3f, 0.0f, -SceneManager.Instance.BoardZ * 0.1f);
         float spawnRadius = 10000.0f;
 
         Vector2 deviation;

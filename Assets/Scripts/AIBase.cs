@@ -12,7 +12,9 @@ abstract public class AIBase
     }
 
     /* 
-     * Param currentWaypoints: The current list of waypoints the actor has
+     * Param curState: The state the Actor is in currently.
+     * Param targetState: The state the actor whishes to reach.
+     * Param currentWaypoints: The current list of waypoints the actor has.
      * 
      * This function gives the AI an opportunity to change the actor's waypoints.
      * This is not necessary for all AI algorithms, but for ones such as RRT this
@@ -21,10 +23,10 @@ abstract public class AIBase
      * 
      * If nothing needs to be done here, simply return currentWaypoints.
      */
-    public abstract List<State> UpdateWaypoints(List<State> currentWaypoints);
+    public abstract List<State> UpdateWaypoints(State curState, State targetState, List<State> currentWaypoints);
 
     /*
-     * Param curState: The state the Actor is in currently
+     * Param curState: The state the Actor is in currently.
      * Param targetState: The state the actor whishes to reach.
      * Param dt: The amount of time (seconds) to simulate forward.
      * 

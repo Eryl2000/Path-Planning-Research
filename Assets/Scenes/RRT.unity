@@ -439,7 +439,7 @@ MonoBehaviour:
   m_MinValue: 0
   m_MaxValue: 100
   m_WholeNumbers: 0
-  m_Value: 20
+  m_Value: 80
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
@@ -1011,7 +1011,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!65 &387152291
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1079,8 +1079,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 387152290}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 1250}
-  m_LocalScale: {x: 2500, y: 200, z: 1000}
+  m_LocalPosition: {x: 0, y: 0, z: 55000}
+  m_LocalScale: {x: 100000, y: 10000, z: 10000}
   m_Children: []
   m_Father: {fileID: 1006735994}
   m_RootOrder: 2
@@ -1128,12 +1128,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81313ceea5ae5bb4b887147d417203b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MainActor: {fileID: 6296652326462497861}
   GroundPlane: {fileID: 2092357703}
-  StartSprite: {fileID: 626614656}
-  EndSprite: {fileID: 1783465956}
   LoadingText: {fileID: 369988335}
   SelectActorDistance: 4000
+  BoardX: 0
+  BoardZ: 0
 --- !u!1 &440027824
 GameObject:
   m_ObjectHideFlags: 0
@@ -1471,7 +1470,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!212 &626614657
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -1626,7 +1625,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!65 &640345618
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1694,8 +1693,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 640345617}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -1250}
-  m_LocalScale: {x: 2500, y: 200, z: 1000}
+  m_LocalPosition: {x: 0, y: 0, z: -55000}
+  m_LocalScale: {x: 100000, y: 10000, z: 10000}
   m_Children: []
   m_Father: {fileID: 1006735994}
   m_RootOrder: 4
@@ -2428,7 +2427,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!65 &1226718770
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2496,8 +2495,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1226718769}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1250, y: 0, z: 0}
-  m_LocalScale: {x: 1000, y: 200, z: 2500}
+  m_LocalPosition: {x: -55000, y: 0, z: 0}
+  m_LocalScale: {x: 10000, y: 10000, z: 120000}
   m_Children: []
   m_Father: {fileID: 1006735994}
   m_RootOrder: 3
@@ -3041,7 +3040,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!212 &1783465957
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -3134,7 +3133,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da296dc6a61210e41adc536fac25af7a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MainActor: {fileID: 6296652326462497861}
   ShowWaypointToggle: {fileID: 1302374796}
   ScenarioSelectorDropdown: {fileID: 374855448}
   StaticObjectPrefab: {fileID: 2429842964357603318, guid: b786f1ff0a7808a49a71cb3042cc8b96,
@@ -3146,8 +3144,6 @@ MonoBehaviour:
   Objects: []
   StaticObjects: []
   DynamicObjects: []
-  boardX: 0
-  boardZ: 0
 --- !u!4 &1856670391
 Transform:
   m_ObjectHideFlags: 0
@@ -3254,7 +3250,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!65 &1945161154
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3322,8 +3318,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1945161153}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1250, y: 0, z: 0}
-  m_LocalScale: {x: 1000, y: 200, z: 2500}
+  m_LocalPosition: {x: 55000, y: 0, z: 0}
+  m_LocalScale: {x: 10000, y: 10000, z: 120000}
   m_Children: []
   m_Father: {fileID: 1006735994}
   m_RootOrder: 1
@@ -10505,7 +10501,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!54 &8057179706088696611
 Rigidbody:
   m_ObjectHideFlags: 0

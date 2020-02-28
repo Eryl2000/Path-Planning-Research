@@ -10,6 +10,7 @@ public class SliderTextUpdate : MonoBehaviour
     {
         originalFixedDeltaTime = Time.fixedDeltaTime;
         textComponent = GetComponent<Text>();
+        SetSliderValue(80.0f);
     }
 
     public void SetSliderValue(float sliderValue)
