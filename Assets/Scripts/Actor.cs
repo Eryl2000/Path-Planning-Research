@@ -25,13 +25,15 @@ public class Actor : MonoBehaviour
     public float MaxSpeed = 12.8611f;
     public float WaypointDistanceThreshold = 150;
     public List<State> waypoints;
-    public bool ShowWaypoints = false;
-    public bool ShowBoundingBox = false;
+    public bool ShowWaypoints = true;
+    public bool ShowBoundingBox = true;
+    public bool Selected = false;
 
     void Awake()
     {
         waypoints = new List<State>();
         CurState = new State(transform.position, transform.rotation, transform.forward);
+        ShowBoundingBox = true;
     }
 
     public void AppendWaypoint(State waypoint)
@@ -99,6 +101,30 @@ public class Actor : MonoBehaviour
         return Vector3.Distance(curState.position, waypoint.position) <= WaypointDistanceThreshold;
     }
 
+    private void Update()
+    {
+        Color waypointColor = new Color(0, 1, 0, 0.1f);
+        if (ShowWaypoints && waypoints.Count > 0)
+        {
+            if (Selected)
+            {
+                waypointColor.a = 0.5f;
+            }
+            SceneManager.DrawLine(CurState.position, waypoints.ElementAt(0).position, waypointColor, transform, Time.fixedDeltaTime, 100, 100);
+            for (int i = 0; i < waypoints.Count - 1; ++i)
+            {
+                SceneManager.DrawLine(waypoints.ElementAt(i).position + transform.up, waypoints.ElementAt(i + 1).position + transform.up, waypointColor, transform, Time.fixedDeltaTime, 100, 100);
+            }
+        }
+        if (ShowBoundingBox)
+        {
+            Vector3 center = GetComponent<BoxCollider>().center;
+            Vector3 halfSize = 100.0f * GetComponent<BoxCollider>().size / 2.0f;
+            Color outlineColor = new Color(0.2f, 0.81f, 0.2f, 1.0f);
+            SceneManager.DrawCircle(transform.position, halfSize.x, 10, outlineColor, transform, Time.fixedDeltaTime, 100, 100);
+        }
+    }
+
     void FixedUpdate()
     {
         /*if (Input.GetMouseButtonDown(0))
@@ -131,35 +157,6 @@ public class Actor : MonoBehaviour
         else
         {
             CurState = StepTowards(CurState, waypoints.ElementAt(0), Time.fixedDeltaTime);
-        }
-
-        if (ShowWaypoints && waypoints.Count > 0)
-        {
-            Color waypointColor = new Color(0, 1, 0, 0.1f);
-            if (ShowBoundingBox)
-            {
-                waypointColor.a = 0.5f;
-            }
-            SceneManager.DrawLine(CurState.position, waypoints.ElementAt(0).position, waypointColor, transform, Time.fixedDeltaTime);
-            for (int i = 0; i < waypoints.Count - 1; ++i)
-            {
-                SceneManager.DrawLine(waypoints.ElementAt(i).position + transform.up, waypoints.ElementAt(i + 1).position + transform.up, waypointColor, transform, Time.fixedDeltaTime);
-            }
-        }
-        if (ShowBoundingBox)
-        {
-            Vector3 center = GetComponent<BoxCollider>().center;
-            Vector3 halfSize = GetComponent<BoxCollider>().size / 2.0f;
-            Vector3 frontLeft = transform.TransformPoint(center + new Vector3(-halfSize.x, 1, halfSize.z));
-            Vector3 frontRight = transform.TransformPoint(center + new Vector3(halfSize.x, 1, halfSize.z));
-            Vector3 backLeft = transform.TransformPoint(center + new Vector3(-halfSize.x, 1, -halfSize.z));
-            Vector3 backRight = transform.TransformPoint(center + new Vector3(halfSize.x, 1, -halfSize.z));
-
-            Color outlineColor = new Color(0.2f, 0.81f, 0.2f, 1.0f);
-            SceneManager.DrawLine(frontLeft, frontRight, outlineColor, transform, Time.fixedDeltaTime);
-            SceneManager.DrawLine(frontRight, backRight, outlineColor, transform, Time.fixedDeltaTime);
-            SceneManager.DrawLine(backRight, backLeft, outlineColor, transform, Time.fixedDeltaTime);
-            SceneManager.DrawLine(backLeft, frontLeft, outlineColor, transform, Time.fixedDeltaTime);
         }
     }
 

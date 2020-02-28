@@ -102,6 +102,7 @@ public class ScenarioManager : MonoBehaviour
                 {
                     GameObject cur = Instantiate(StaticObjectPrefab, pos, orientation, this.transform);
                     cur.gameObject.layer = LayerMask.NameToLayer("Obstacles");
+                    cur.transform.localScale = new Vector3(cur.transform.localScale.x * (3 * Random.value + 1), 1, cur.transform.localScale.z * (3 * Random.value + 1));
                     Objects.Add(cur);
                     StaticObjects.Add(cur);
                     break;

@@ -14,6 +14,7 @@ public class SceneManager : MonoBehaviour
     public GameObject StartSprite;
     public GameObject EndSprite;
     public GameObject LoadingText;
+    public float SelectActorDistance;
 
     private enum SceneState { None, RegenerateScenario, CalculatePath, WaitForPath, ShowPath };
     SceneState sceneState;
@@ -120,70 +121,69 @@ public class SceneManager : MonoBehaviour
         {
             Application.Quit();
         }
-        else if (Input.GetKeyDown(KeyCode.R))
+        if (Input.GetKeyDown(KeyCode.R))
         {
             ResetWidgets();
             sceneState = SceneState.RegenerateScenario;
             LoadingText.SetActive(true);
         }
-        else if (Input.GetMouseButtonDown(0))
-        {
-            RaycastHit hit;
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("Obstacles")))
-            {
-                if (selectedActor != null)
-                {
-                    selectedActor.ShowBoundingBox = false;
-                }
-                Actor actorHit = hit.collider.gameObject.GetComponent<Actor>();
-                if (actorHit == null)
-                {
-                    selectedActor = null;
-                }
-                else
-                {
-                    actorHit.ShowBoundingBox = true;
-                    selectedActor = actorHit;
-                }
-            }
-            else if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
-            {
-                if (Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt))
-                {
-                    ScenarioManager.Instance.CreateObject(hit.point, Quaternion.identity, ScenarioManager.ObjectType.Static, null);
-                }
-                else if (selectedActor != null && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
-                {
-                    selectedActor.InsertWaypoint(new State(hit.point, selectedActor.CurState.rotation, selectedActor.CurState.velocity));
-                }
-                else
-                {
-                    if (selectedActor != null)
-                    {
-                        selectedActor.ShowBoundingBox = false;
-                        selectedActor = null;
-                    }
-                    State possibleState = new State(hit.point, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), Random.value, 0.0f);
-                    if (!MainActor.WouldHitObject(possibleState))
-                    {
-                        startState = possibleState;
-                        StartSprite.transform.position = possibleState.position;
-                        startValid = true;
-                        if (startValid && endValid)
-                        {
-                            sceneState = SceneState.CalculatePath;
-                        }
-                    }
-                }
-            }
-        }
-        else if (Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButtonDown(0))
         {
             RaycastHit hit;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
             {
+                if (selectedActor != null)
+                {
+                    selectedActor.Selected = false;
+                    selectedActor = null;
+                }
+                Actor clicked = GetClickedShip(hit.point);
+                if (clicked != null)
+                {
+                    clicked.Selected = true;
+                    selectedActor = clicked;
+                }
+            }
+            else if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
+            {
+                if (selectedActor != null)
+                {
+                    selectedActor.Selected = false;
+                    selectedActor = null;
+                }
+                State possibleState = new State(hit.point, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), Random.value, 0.0f);
+                if (!MainActor.WouldHitObject(possibleState))
+                {
+                    startState = possibleState;
+                    StartSprite.transform.position = possibleState.position;
+                    startValid = true;
+                    if (startValid && endValid)
+                    {
+                        sceneState = SceneState.CalculatePath;
+                    }
+                }
+            }
+        }
+        if (Input.GetMouseButtonDown(1))
+        {
+            RaycastHit hit;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
+            {
+                if (selectedActor != null)
+                {
+                    if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                    {
+                        selectedActor.AppendWaypoint(new State(hit.point, selectedActor.CurState.rotation, selectedActor.CurState.velocity));
+                    }
+                    else
+                    {
+                        selectedActor.ClearWaypoints();
+                        selectedActor.AppendWaypoint(new State(hit.point, selectedActor.CurState.rotation, selectedActor.CurState.velocity));
+                    }
+                }
+
                 State possibleState = new State(hit.point, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), Random.value, MainActor.CruiseSpeed);
                 if (!MainActor.WouldHitObject(possibleState))
                 {
@@ -197,7 +197,15 @@ public class SceneManager : MonoBehaviour
                 }
             }
         }
-
+        if (Input.GetKeyDown(KeyCode.O))
+        {
+            RaycastHit hit;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << LayerMask.NameToLayer("GroundPlane")))
+            {
+                ScenarioManager.Instance.CreateObject(hit.point, Quaternion.identity, ScenarioManager.ObjectType.Static, null);
+            }
+        }
     }
 
 
@@ -219,5 +227,56 @@ public class SceneManager : MonoBehaviour
         {
             GameObject.Destroy(myLine, duration);
         }
+    }
+
+    public static void DrawCircle(Vector3 center, float radius, int numPoints, Color color, Transform parent, float duration = -1.0f, float thickness = 5.0f, int z_index = 0)
+    {
+        GameObject myLine = new GameObject("Line");
+        myLine.transform.parent = parent;
+        myLine.transform.position = center;
+        myLine.AddComponent<LineRenderer>();
+        LineRenderer lr = myLine.GetComponent<LineRenderer>();
+        lr.material = new Material(Shader.Find("UI/Unlit/Transparent"));
+        lr.material.color = color;
+        lr.positionCount = numPoints + 1;
+        lr.startWidth = lr.endWidth = thickness;
+
+        float angle = 0f;
+        for (int i = 0; i < numPoints + 1; i++)
+        {
+            float x = center.x + Mathf.Sin(Mathf.Deg2Rad * angle) * radius;
+            float z = center.z + Mathf.Cos(Mathf.Deg2Rad * angle) * radius;
+            lr.SetPosition(i, new Vector3(x, center.y + z_index, z));
+            angle += 360f / numPoints;
+        }
+
+        if (duration >= 0.0f)
+        {
+            GameObject.Destroy(myLine, duration);
+        }
+    }
+
+    private Actor GetClickedShip(Vector3 hitLocation)
+    {
+        float minDist = Mathf.Infinity;
+        Actor closest = null;
+        foreach (GameObject ga in ScenarioManager.Instance.DynamicObjects)
+        {
+            Actor actor = ga.GetComponent<Actor>();
+            if (actor != null)
+            {
+                float dist = Vector3.Distance(hitLocation, actor.transform.position);
+                if (dist < minDist)
+                {
+                    minDist = dist;
+                    closest = actor;
+                }
+            }
+        }
+        if (minDist <= SelectActorDistance)
+        {
+            return closest;
+        }
+        return null;
     }
 }
