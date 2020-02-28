@@ -70,7 +70,7 @@ public class ScenarioManager : MonoBehaviour
                 {
                     GameObject cur = Instantiate(StaticObjectPrefab, pos, orientation, this.transform);
                     cur.gameObject.layer = LayerMask.NameToLayer("Obstacles");
-                    cur.transform.localScale = new Vector3(cur.transform.localScale.x * (3 * Random.value + 1), 1, cur.transform.localScale.z * (3 * Random.value + 1));
+                    cur.transform.localScale = new Vector3(cur.transform.localScale.x * (3 * Random.value + 1), cur.transform.localScale.y, cur.transform.localScale.z * (3 * Random.value + 1));
                     Objects.Add(cur);
                     StaticObjects.Add(cur);
                     break;
@@ -110,11 +110,6 @@ public class ScenarioManager : MonoBehaviour
                 waypoints.Add(GetEmptySpot());
             }
             CreateObject(state.position, state.rotation, ObjectType.Dynamic, waypoints);
-
-            if (i == 0)
-            {
-                DynamicObjects.ElementAt(0).GetComponent<Actor>().AI = new AI_RRT(DynamicObjects.ElementAt(0).GetComponent<Actor>());
-            }
         }
     }
 

@@ -25,7 +25,7 @@ public class AI_RRT : AI_PotentialFieldFollowWaypoints
 
     public override List<State> UpdateWaypoints(State curState, State targetState, List<State> currentWaypoints)
     {
-        if (treeBase == null)
+        if (treeBase == null || targetState != this.targetState)
         {
             treeBase = new TreeNode<State>(curState);
             this.targetState = targetState;

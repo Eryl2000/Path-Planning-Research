@@ -193,7 +193,16 @@ public class Actor : MonoBehaviour
         }
         if (waypoints.Count == 0)
         {
-            CurState.Speed = 0.0f;
+            float newSpeed = CurState.Speed - ShipData.MaxAcceleration * Time.deltaTime;
+            if(newSpeed < 0)
+            {
+                CurState.velocity = Vector3.zero;
+            }
+            else
+            {
+                CurState.Speed = newSpeed;
+            }
+            CurState.position += CurState.velocity * Time.deltaTime;
         }
         else
         {
