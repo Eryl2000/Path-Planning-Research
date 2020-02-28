@@ -29,11 +29,31 @@ public class Actor : MonoBehaviour
     public bool ShowBoundingBox = true;
     public bool Selected = false;
 
+    LineRenderer boundingBoxLine;
+    Color boundingBoxLineColor = new Color(0.2f, 0.81f, 0.2f, 1.0f);
+    LineRenderer waypointsLine;
+    Color waypointsLineColor = new Color(0, 1, 0, 0.1f);
+    float lineThickness = 100.0f;
+
     void Awake()
     {
         waypoints = new List<State>();
         CurState = new State(transform.position, transform.rotation, transform.forward);
         ShowBoundingBox = true;
+
+        boundingBoxLine = new GameObject().AddComponent<LineRenderer>() as LineRenderer;
+        boundingBoxLine.transform.parent = transform;
+        boundingBoxLine.name = "BoundingBoxLine";
+        boundingBoxLine.material = new Material(Shader.Find("UI/Unlit/Transparent"));
+        boundingBoxLine.material.color = boundingBoxLineColor;
+        boundingBoxLine.startWidth = boundingBoxLine.endWidth = lineThickness;
+
+        waypointsLine = new GameObject().AddComponent<LineRenderer>() as LineRenderer;
+        waypointsLine.transform.parent = transform;
+        waypointsLine.name = "WaypointsLine";
+        waypointsLine.material = new Material(Shader.Find("UI/Unlit/Transparent"));
+        waypointsLine.material.color = waypointsLineColor;
+        waypointsLine.startWidth = waypointsLine.endWidth = lineThickness;
     }
 
     public void AppendWaypoint(State waypoint)
@@ -103,25 +123,35 @@ public class Actor : MonoBehaviour
 
     private void Update()
     {
-        Color waypointColor = new Color(0, 1, 0, 0.1f);
-        if (ShowWaypoints && waypoints.Count > 0)
+        if (ShowBoundingBox)
+        {
+            const int numPoints = 10;
+            boundingBoxLine.positionCount = numPoints;
+            boundingBoxLine.loop = true;
+
+            Vector3 halfSize = GetComponent<BoxCollider>().size / 2.0f;
+            float angle = 0f;
+            for (int i = 0; i < numPoints; i++)
+            {
+                float x = transform.position.x + Mathf.Sin(Mathf.Deg2Rad * angle) * halfSize.x * 100.0f;
+                float z = transform.position.z + Mathf.Cos(Mathf.Deg2Rad * angle) * halfSize.x * 100.0f;
+                boundingBoxLine.SetPosition(i, new Vector3(x, transform.position.y + 100.0f, z));
+                angle += 360.0f / numPoints;
+            }
+        }
+
+        if (ShowWaypoints)
         {
             if (Selected)
             {
-                waypointColor.a = 0.5f;
+                waypointsLineColor.a = 0.5f;
             }
-            SceneManager.DrawLine(CurState.position, waypoints.ElementAt(0).position, waypointColor, transform, Time.fixedDeltaTime, 100, 100);
-            for (int i = 0; i < waypoints.Count - 1; ++i)
+            waypointsLine.positionCount = waypoints.Count + 1;
+            waypointsLine.SetPosition(0, transform.position + transform.up * 100.0f);
+            for (int i = 0; i < waypoints.Count; ++i)
             {
-                SceneManager.DrawLine(waypoints.ElementAt(i).position + transform.up, waypoints.ElementAt(i + 1).position + transform.up, waypointColor, transform, Time.fixedDeltaTime, 100, 100);
+                waypointsLine.SetPosition(i + 1, waypoints.ElementAt(i).position + transform.up * 100.0f);
             }
-        }
-        if (ShowBoundingBox)
-        {
-            Vector3 center = GetComponent<BoxCollider>().center;
-            Vector3 halfSize = 100.0f * GetComponent<BoxCollider>().size / 2.0f;
-            Color outlineColor = new Color(0.2f, 0.81f, 0.2f, 1.0f);
-            SceneManager.DrawCircle(transform.position, halfSize.x, 10, outlineColor, transform, Time.fixedDeltaTime, 100, 100);
         }
     }
 

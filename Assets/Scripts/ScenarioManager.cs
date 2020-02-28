@@ -149,11 +149,48 @@ public class ScenarioManager : MonoBehaviour
 
     private void GenerateTwoLanesHeadOn()
     {
-        for (int i = 0; i < numStaticObjects; ++i)
+        Vector3 location1 = new Vector3(-boardX * 0.3f, 0.0f, 0.0f);
+        Vector3 location2 = new Vector3(boardX * 0.3f, 0.0f, -boardZ * 0.1f);
+        float spawnRadius = 10000.0f;
+
+        Vector2 deviation;
+        for (int i = 0; i < numDynamicObjects / 2; ++i)
         {
-            Vector3 pos = new Vector3(Random.Range(-boardX / 2.0f, boardX / 2.0f), 0.0f, Random.Range(-boardZ / 2.0f, boardZ / 2.0f));
-            Quaternion orientation = Quaternion.Euler(0, Random.Range(-180.0f, 180.0f), 0);
-            CreateObject(pos, orientation, ObjectType.Static, null);
+            Vector3 pos = location1;
+            deviation = Random.insideUnitCircle;
+            pos.x += spawnRadius * deviation.x;
+            pos.z += spawnRadius * deviation.y;
+
+            Quaternion orientation = Quaternion.Euler(0, 90.0f, 0);
+            List<State> waypoints = new List<State>();
+            for (int w = 0; w < 1; ++w)
+            {
+                Vector3 target = location2;
+                deviation = Random.insideUnitCircle;
+                target.x += spawnRadius * deviation.x;
+                target.z += spawnRadius * deviation.y;
+                waypoints.Add(new State(target, new Vector3(0.0f, 90.0f, 0.0f), 0.0f, DynamicObjectPrefab.CruiseSpeed));
+            }
+            CreateObject(pos, orientation, ObjectType.Dynamic, waypoints);
+        }
+        for (int i = 0; i < (numDynamicObjects + 1) / 2; ++i)
+        {
+            Vector3 pos = location2;
+            deviation = Random.insideUnitCircle;
+            pos.x += spawnRadius * deviation.x;
+            pos.z += spawnRadius * deviation.y;
+
+            Quaternion orientation = Quaternion.Euler(0, -90.0f, 0);
+            List<State> waypoints = new List<State>();
+            for (int w = 0; w < 1; ++w)
+            {
+                Vector3 target = location1;
+                deviation = Random.insideUnitCircle;
+                target.x += spawnRadius * deviation.x;
+                target.z += spawnRadius * deviation.y;
+                waypoints.Add(new State(target, new Vector3(0.0f, -90.0f, 0.0f), 0.0f, DynamicObjectPrefab.CruiseSpeed));
+            }
+            CreateObject(pos, orientation, ObjectType.Dynamic, waypoints);
         }
     }
 

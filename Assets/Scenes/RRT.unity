@@ -1095,13 +1095,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 534669902}
-  m_LocalRotation: {x: 0.43710822, y: -0, z: -0, w: 0.89940894}
-  m_LocalPosition: {x: 0, y: 75559.83, z: -74180.516}
+  m_LocalRotation: {x: 0.39386564, y: -0, z: -0, w: 0.919168}
+  m_LocalPosition: {x: 0, y: 66470, z: -73096}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 51.839, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 46.391003, y: 0, z: 0}
 --- !u!114 &534669906
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1759,7 +1759,7 @@ MonoBehaviour:
   m_Text: "RRT Path Planning Algorithm\n\nControls:\n   Left Click: Select ship\n
     \  Right Click: Set waypoint\n   Shift + Right Click: Append waypoint\n   O: Create
     obstacle at mouse position\n   R:  Regenerate scenario\n\n   WASD: Move camera\n
-    \  Q/E: Camera up/down"
+    \  E/Q: Camera up/down\n   Shift: Increase camera speed"
 --- !u!222 &839021478
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2262,7 +2262,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  m_IsOn: 0
+  m_IsOn: 1
 --- !u!1 &1486836056
 GameObject:
   m_ObjectHideFlags: 0
@@ -2580,7 +2580,7 @@ MonoBehaviour:
   DynamicObjectPrefab: {fileID: 6296652328159224199, guid: 96c68b6e0a88afd4d9852eaf19a1f993,
     type: 3}
   numStaticObjects: 10
-  numDynamicObjects: 5
+  numDynamicObjects: 20
   Objects: []
   StaticObjects: []
   DynamicObjects: []
