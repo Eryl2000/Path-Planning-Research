@@ -141,7 +141,7 @@ public class ScenarioManager : MonoBehaviour
             for (int w = 0; w < 3; ++w)
             {
                 Vector3 target = new Vector3(Random.Range(-boardX / 2.0f, boardX / 2.0f), 0.0f, Random.Range(-boardZ / 2.0f, boardZ / 2.0f));
-                waypoints.Add(new State(target, new Vector3(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), 0.0f, DynamicObjectPrefab.CruiseSpeed));
+                waypoints.Add(new State(target, new Vector3(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), 0.0f, DynamicObjectPrefab.ShipData.CruiseSpeed));
             }
             CreateObject(pos, orientation, ObjectType.Dynamic, waypoints);
         }
@@ -169,7 +169,7 @@ public class ScenarioManager : MonoBehaviour
                 deviation = Random.insideUnitCircle;
                 target.x += spawnRadius * deviation.x;
                 target.z += spawnRadius * deviation.y;
-                waypoints.Add(new State(target, new Vector3(0.0f, 90.0f, 0.0f), 0.0f, DynamicObjectPrefab.CruiseSpeed));
+                waypoints.Add(new State(target, new Vector3(0.0f, 90.0f, 0.0f), 0.0f, DynamicObjectPrefab.ShipData.CruiseSpeed));
             }
             CreateObject(pos, orientation, ObjectType.Dynamic, waypoints);
         }
@@ -188,7 +188,7 @@ public class ScenarioManager : MonoBehaviour
                 deviation = Random.insideUnitCircle;
                 target.x += spawnRadius * deviation.x;
                 target.z += spawnRadius * deviation.y;
-                waypoints.Add(new State(target, new Vector3(0.0f, -90.0f, 0.0f), 0.0f, DynamicObjectPrefab.CruiseSpeed));
+                waypoints.Add(new State(target, new Vector3(0.0f, -90.0f, 0.0f), 0.0f, DynamicObjectPrefab.ShipData.CruiseSpeed));
             }
             CreateObject(pos, orientation, ObjectType.Dynamic, waypoints);
         }

@@ -184,7 +184,7 @@ public class SceneManager : MonoBehaviour
                     }
                 }
 
-                State possibleState = new State(hit.point, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), Random.value, MainActor.CruiseSpeed);
+                State possibleState = new State(hit.point, Quaternion.Euler(0.0f, Random.Range(-180.0f, 180.0f), 0.0f), Random.value, MainActor.ShipData.CruiseSpeed);
                 if (!MainActor.WouldHitObject(possibleState))
                 {
                     endState = possibleState;

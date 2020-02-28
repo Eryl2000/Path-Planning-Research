@@ -98,7 +98,7 @@ public class RRT
         {
             Vector3 pos = new Vector3(Random.Range(-boardWidth / 2.0f, boardWidth / 2.0f), endState.position.y, Random.Range(-boardHeight / 2.0f, boardHeight / 2.0f));
             Vector3 rot = new Vector3(0.0f, Random.Range(-180.0f, 180.0f), 0.0f);
-            return new State(pos, rot, rot.y, actor.CruiseSpeed);
+            return new State(pos, rot, rot.y, actor.ShipData.CruiseSpeed);
         }
     }
 
@@ -138,7 +138,7 @@ public class RRT
         newState = start;
         for (int i = 0; i < numPoints; ++i)
         {
-            newState = actor.StepTowards(newState, goalState, timeToSimulate / numPoints);
+            newState = actor.AI.StepTowards(newState, goalState, timeToSimulate / numPoints);
             if (actor.WouldHitObject(newState))
             {
                 newState = State.Undefined;
@@ -184,7 +184,7 @@ public class RRT
                 State temp = cur.Value;
                 for (int i = 0; i < 4; ++i)
                 {
-                    State temp2 = actor.StepTowards(temp, target, 8.0f / 3.0f);
+                    State temp2 = actor.AI.StepTowards(temp, target, 8.0f / 3.0f);
                     SceneManager.DrawLine(temp.position, temp2.position, Color.red, actor.transform, -1, 15f, 1);
                     temp = temp2;
                 }

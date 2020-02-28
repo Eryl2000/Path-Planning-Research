@@ -1171,7 +1171,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 0.000061035156, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 450, y: 450}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &440027826
@@ -2024,7 +2024,7 @@ MonoBehaviour:
   m_Text: "RRT Path Planning Algorithm\n\nControls:\n   Left Click: Select ship\n
     \  Right Click: Set waypoint\n   Shift + Right Click: Append waypoint\n   O: Create
     obstacle at mouse position\n   R:  Regenerate scenario\n\n   WASD: Move camera\n
-    \  E/Q: Camera up/down\n   Shift: Increase camera speed"
+    \  Scroll Wheel: Camera zoom\n   Shift: Increase camera speed"
 --- !u!222 &839021478
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3197,7 +3197,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0.000061035156, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 600, y: 500}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &1867335137
@@ -3858,12 +3858,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48b097bcb5e3191439d7af758c06b211, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MaxAcceleration: 1
-  MaxTurningRate: 3
-  CruiseSpeed: 7.71667
-  MinSpeed: 0
-  MaxSpeed: 12.8611
-  WaypointDistanceThreshold: 150
+  ShipData:
+    MaxAcceleration: 1
+    MaxTurningRate: 3
+    CruiseSpeed: 7.71667
+    MinSpeed: 0
+    MaxSpeed: 12.8611
+    WaypointDistanceThreshold: 150
   waypoints: []
   ShowWaypoints: 0
   ShowBoundingBox: 0
